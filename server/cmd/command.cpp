@@ -5,9 +5,9 @@
 #include "../services/database_connection.h"
 #include "../services/server.h"
 #include <iostream>
-#include <limits.h>
+#include <climits>
 #include <libgen.h>
-#include <string.h>
+#include <cstring>
 
 namespace cmd {
     int runCommand(int argc, char *argv[]) {

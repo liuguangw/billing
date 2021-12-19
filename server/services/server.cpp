@@ -5,12 +5,9 @@
 #include "server.h"
 #include "load_server_config.h"
 #include <iostream>
-#include <vector>
 
 namespace services {
     Server::Server() {
-        using std::string;
-        using std::vector;
         this->serverConfig = new common::ServerConfig;
         this->databaseConnection = NULL;
     }

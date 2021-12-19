@@ -3,12 +3,8 @@
 //
 
 #include "load_server_config.h"
-#include <cstddef>
-#include <vector>
 
 namespace services {
-    using std::string;
-    using std::vector;
 
     void loadServerConfig(const char *configFilePath, common::ServerConfig *serverConfig) {
         //set default value

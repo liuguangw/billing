@@ -6,8 +6,10 @@
 
 namespace services {
     bool DatabaseConnection::connect() {
-        return mysql_real_connect(this->mysql, this->host, this->user,
-                                             this->passwd, this->db, this->port,
+        mysql_options(this->mysql,MYSQL_OPT_RECONNECT,&this->reConnect);
+        return mysql_real_connect(this->mysql, this->serverConfig->DbHost.c_str(), this->serverConfig->DbUser.c_str(),
+                                             this->serverConfig->DbPassword.c_str(), this->serverConfig->DbName.c_str(),
+                                             this->serverConfig->DbPort,
                                              NULL, 0) != NULL;
     }
 

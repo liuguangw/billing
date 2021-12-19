@@ -3,7 +3,11 @@
 //
 #include "command.h"
 #include "../services/database_connection.h"
+#include "../services/server.h"
 #include <iostream>
+#include <limits.h>
+#include <libgen.h>
+#include <string.h>
 
 namespace cmd {
     int runCommand(int argc, char *argv[]) {
@@ -13,11 +17,20 @@ namespace cmd {
         for (int i = 0; i < argc; i++) {
             cout << "arg[" << i << "] = " << argv[i] << endl;
         }
-        DatabaseConnection connection("127.0.0.1","root","123456","web",3306);
-        if(connection.connect()){
-            cout<<"mysql version: "<<connection.serverVersion()<<endl;
-        }else{
-            cout<<"connection error: "<<connection.lastError()<<endl;
+        {
+            char pathBuffer[PATH_MAX];
+            char* distPath=realpath (argv[0],pathBuffer);
+            distPath=dirname(distPath);
+            distPath=strcat(distPath,"/config.yaml");
+            cout<<"config file path: "<<distPath<<endl;
+            services::Server server;
+            server.initConfig(distPath);
+            try{
+                server.initDatabase();
+            }catch (const char* err){
+                cout << "connection error: " << err << endl;
+                return 1;
+            }
         }
         return 0;
     }

@@ -6,15 +6,13 @@
 #define BILLING_DATABASE_CONNECTION_H
 
 #include <mysql.h>
+#include "../common/server_config.h"
 
 namespace services {
     class DatabaseConnection {
     private:
-        const char *host;
-        const char *user;
-        const char *passwd;
-        const char *db;
-        unsigned int port;
+        common::ServerConfig *serverConfig;
+        bool reConnect;
         MYSQL *mysql;
     public:
         /**
@@ -25,11 +23,7 @@ namespace services {
          * @param db 数据库名称
          * @param port 端口
          */
-        DatabaseConnection(const char *host,
-                           const char *user,
-                           const char *passwd,
-                           const char *db,
-                           unsigned int port) : host(host), user(user), passwd(passwd), db(db), port(port) {
+        DatabaseConnection(common::ServerConfig *serverConfig) : serverConfig(serverConfig),reConnect(true) {
             mysql = mysql_init(NULL);
         }
 

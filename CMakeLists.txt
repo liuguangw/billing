@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 message("build type ${CMAKE_BUILD_TYPE}")
+add_subdirectory(deps/yaml-cpp)
 project(billing)
 # 静态链接
 set(CMAKE_CXX_FLAGS "-static -g0 -Wall ${CMAKE_CXX_FLAGS}")

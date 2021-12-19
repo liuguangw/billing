@@ -30,5 +30,7 @@ namespace services {
         if (!this->databaseConnection->connect()) {
             throw this->databaseConnection->lastError();
         }
+        const char *serverVersion = this->databaseConnection->serverVersion();
+        std::cout << "mysql version: " << serverVersion << std::endl;
     }
 }

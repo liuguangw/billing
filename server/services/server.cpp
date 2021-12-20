@@ -97,8 +97,8 @@ namespace services {
         }
         string listenAddr = this->serverConfig.IP;
         listenAddr += ":";
-        char buffer [8];
-        sprintf(buffer,"%d",this->serverConfig.Port);
+        char buffer[8];
+        sprintf(buffer, "%d", this->serverConfig.Port);
         listenAddr += buffer;
         this->logger.infoLn(listenAddr.c_str());
         try {
@@ -118,7 +118,7 @@ namespace services {
         for (;;) {
             nfds = epoll_wait(this->epollFd, events, MAX_EVENTS, 5000);
             if (nfds == -1) {
-                std::cout<<"aaa"<<std::endl;
+                std::cout << "aaa" << std::endl;
                 throw errno;
             }
 
@@ -127,22 +127,39 @@ namespace services {
                     conn_sock = accept4(this->serverSockFd,
                                         (struct sockaddr *) NULL, NULL, SOCK_NONBLOCK);
                     if (conn_sock == -1) {
-                        std::cout<<"bbb"<<std::endl;
+                        std::cout << "bbb" << std::endl;
                         throw errno;
                     }
+                    this->logger.infoLn("connected");
                     this->serverEpollEvent.events = EPOLLIN | EPOLLET;
                     this->serverEpollEvent.data.fd = conn_sock;
                     if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, conn_sock,
                                   &this->serverEpollEvent) == -1) {
-                        std::cout<<"ccc"<<std::endl;
+                        std::cout << "ccc" << std::endl;
                         throw errno;
                     }
                 } else {
                     int connFd = events[n].data.fd;
-                    auto p = recv(connFd, buff, 4096, 0);
-                    buff[p] = '\0';
-                    this->logger.infoLn(buff);
-                    close(connFd);
+                    ssize_t readCount;
+                    while (true) {
+                        readCount = read(connFd, buff, 4096);
+                        std::cout << "readCount: "<<readCount << std::endl;
+                        if (readCount < 0) {
+                            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                                //this->logger.infoLn("EAGAIN or EWOULDBLOCK");
+                            } else {
+                                this->logger.errorLn("read error");
+                            }
+                            break;
+                        }
+                        if (readCount == 0) {
+                            this->logger.infoLn("disconnected");
+                            close(connFd);
+                            break;
+                        }
+                        buff[readCount] = '\0';
+                        this->logger.infoLn(buff);
+                    }
                 }
             }
         }

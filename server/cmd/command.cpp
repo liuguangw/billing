@@ -4,34 +4,43 @@
 #include "command.h"
 #include "../services/database_connection.h"
 #include "../services/server.h"
-#include <iostream>
-#include <climits>
 #include <libgen.h>
 #include <cstring>
+#include <string>
 
 namespace cmd {
+    using std::string;
+    using std::stringbuf;
+
     int runCommand(int argc, char *argv[]) {
-        using std::cout;
-        using std::endl;
-        using services::DatabaseConnection;
-        for (int i = 0; i < argc; i++) {
-            cout << "arg[" << i << "] = " << argv[i] << endl;
+        services::Server server;
+        char *exePath = canonicalize_file_name(argv[0]);
+        string exeDir = dirname(exePath);
+        free(exePath);
+        {
+            //获取配置文件的绝对路径
+            string configFilePath = exeDir;
+            configFilePath += "/config.yaml";
+            server.initConfig(configFilePath.c_str());
         }
         {
-            char pathBuffer[PATH_MAX];
-            char* distPath=realpath (argv[0],pathBuffer);
-            distPath=dirname(distPath);
-            distPath=strcat(distPath,"/config.yaml");
-            cout<<"config file path: "<<distPath<<endl;
-            services::Server server;
-            server.initConfig(distPath);
-            try{
-                server.initDatabase();
-            }catch (const char* err){
-                cout << "connection error: " << err << endl;
-                return 1;
+            string logPath = "billing.log";
+            //获取日志文件参数
+            for (int i = 0; i < argc; i++) {
+                if ((strcmp(argv[i], "--log-path") == 0) && (i + 1 < argc)) {
+                    logPath = argv[i + 1];
+                    break;
+                }
             }
+            string logFilePath;
+            //相对路径
+            if (logPath[0] != '/') {
+                logFilePath += exeDir;
+                logFilePath += "/";
+            }
+            logFilePath += logPath;
+            server.initLogger(logFilePath.c_str());
         }
-        return 0;
+        return server.run();
     }
 }

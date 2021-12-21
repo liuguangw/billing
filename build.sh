@@ -1,6 +1,6 @@
 #!/bin/sh
 
-outputDir="$(pwd)/build"
+outputDir="$(pwd)/cmake-build-billing"
 buildType=MinSizeRel
 
 mkdir -p "${outputDir}"

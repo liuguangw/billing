@@ -17,9 +17,7 @@ namespace services {
         common::ServerConfig serverConfig;
         Logger logger;
         DatabaseConnection *databaseConnection;
-        sockaddr_in  serverAddress;
         int serverSockFd,epollFd;
-        epoll_event serverEpollEvent;
 
         void initDatabase();
 

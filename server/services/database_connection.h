@@ -34,9 +34,8 @@ namespace services {
 
         /**
          * 连接数据库
-         * @return 连接是否成功
          */
-        bool connect();
+        void connect();
 
         /**
          * 获取最后一次的错误信息

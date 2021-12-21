@@ -4,6 +4,7 @@
 
 #include "server.h"
 #include "load_server_config.h"
+#include "../common/billing_exception.h"
 #include <string>
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -13,17 +14,17 @@
 #include <sys/socket.h>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 
 
 namespace services {
     Server::Server() {
-        this->databaseConnection = NULL;
         this->serverSockFd = -1;
         this->epollFd = -1;
     }
 
     Server::~Server() {
-        if (this->databaseConnection != NULL) {
+        if (this->databaseConnection != nullptr) {
             delete this->databaseConnection;
         }
         if (this->epollFd != -1) {
@@ -44,63 +45,61 @@ namespace services {
 
     void Server::initDatabase() {
         this->databaseConnection = new DatabaseConnection(&this->serverConfig);
-        if (!this->databaseConnection->connect()) {
-            throw this->databaseConnection->lastError();
-        }
+        this->databaseConnection->connect();
     }
 
     void Server::initListener() {
         this->serverSockFd = socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
         if (this->serverSockFd < 0) {
-            throw errno;
+            throw common::BillingException("init server socket failed",errno);
         }
-        this->serverAddress.sin_family = AF_INET;
-        this->serverAddress.sin_addr.s_addr = inet_addr(this->serverConfig.IP.c_str());
-        this->serverAddress.sin_port = htons(this->serverConfig.Port);
-        if (bind(this->serverSockFd, (sockaddr *) &this->serverAddress, sizeof(this->serverAddress)) < 0) {
-            throw errno;
+        sockaddr_in  serverAddress{};
+        serverAddress.sin_family = AF_INET;
+        serverAddress.sin_addr.s_addr = inet_addr(this->serverConfig.IP.c_str());
+        serverAddress.sin_port = htons(this->serverConfig.Port);
+        if (bind(this->serverSockFd, (sockaddr *) &serverAddress, sizeof(serverAddress)) < 0) {
+            throw common::BillingException("server socket bind failed",errno);
         }
         if (listen(this->serverSockFd, 10) < 0) {
-            throw errno;
+            throw common::BillingException("server socket listen failed",errno);
         }
         //初始化epoll
         this->epollFd = epoll_create1(0);
         if (this->epollFd == -1) {
-            throw errno;
+            throw common::BillingException("init epoll fd failed",errno);
         }
         //注册事件
-        this->serverEpollEvent.events = EPOLLIN;
-        this->serverEpollEvent.data.fd = this->serverSockFd;
-        if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, this->serverSockFd, &this->serverEpollEvent) == -1) {
-            throw errno;
+        epoll_event epollEvent{};
+        epollEvent.events = EPOLLIN;
+        epollEvent.data.fd = this->serverSockFd;
+        if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, this->serverSockFd, &epollEvent) == -1) {
+            throw common::BillingException("epoll register server socket failed",errno);
         }
     }
 
     int Server::run() {
         using std::string;
-        /*try {
+        try {
             this->initDatabase();
-        } catch (const char *connErr) {
-            string errorInfo = "connect database failed: ";
-            errorInfo.append(connErr);
-            this->logger.errorLn(errorInfo.c_str());
+        } catch (common::BillingException& ex) {
+            this->logger.errorLn(ex.what());
             return EXIT_FAILURE;
         }
         string serverVersionInfo = "mysql version: ";
         serverVersionInfo.append(this->databaseConnection->serverVersion());
-        this->logger.infoLn(serverVersionInfo.c_str());*/
+        this->logger.infoLn(serverVersionInfo.c_str());
+        //
         try {
             this->initListener();
-        } catch (int errCode) {
-            this->logger.errorLn(strerror(errCode));
+        } catch (common::BillingException& ex) {
+            this->logger.errorLn(ex.what());
             return EXIT_FAILURE;
         }
-        string listenAddr = this->serverConfig.IP;
-        listenAddr += ":";
-        char buffer[8];
-        sprintf(buffer, "%d", this->serverConfig.Port);
-        listenAddr += buffer;
-        this->logger.infoLn(listenAddr.c_str());
+        {
+            std::stringstream listenAddress;
+            listenAddress<< this->serverConfig.IP.c_str()<<":"<<this->serverConfig.Port;
+            this->logger.infoLn(listenAddress.str().c_str());
+        }
         try {
             this->runLoop();
         } catch (int errCode) {
@@ -113,30 +112,28 @@ namespace services {
     int Server::runLoop() {
         const int MAX_EVENTS = 10;
         epoll_event events[MAX_EVENTS];
-        int nfds, conn_sock;
+        epoll_event epollEvent{};
+        int fdCount, conn_sock;
         char buff[4096];
         for (;;) {
-            nfds = epoll_wait(this->epollFd, events, MAX_EVENTS, 5000);
-            if (nfds == -1) {
-                std::cout << "aaa" << std::endl;
-                throw errno;
+            fdCount = epoll_wait(this->epollFd, events, MAX_EVENTS, 5000);
+            if (fdCount == -1) {
+                throw common::BillingException("epoll wait failed",errno);
             }
 
-            for (int n = 0; n < nfds; ++n) {
+            for (int n = 0; n < fdCount; ++n) {
                 if (events[n].data.fd == this->serverSockFd) {
                     conn_sock = accept4(this->serverSockFd,
-                                        (struct sockaddr *) NULL, NULL, SOCK_NONBLOCK);
+                                        (struct sockaddr *) nullptr, nullptr, SOCK_NONBLOCK);
                     if (conn_sock == -1) {
-                        std::cout << "bbb" << std::endl;
-                        throw errno;
+                        throw common::BillingException("accept connection failed",errno);
                     }
                     this->logger.infoLn("connected");
-                    this->serverEpollEvent.events = EPOLLIN | EPOLLET;
-                    this->serverEpollEvent.data.fd = conn_sock;
+                    epollEvent.events = EPOLLIN | EPOLLET;
+                    epollEvent.data.fd = conn_sock;
                     if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, conn_sock,
-                                  &this->serverEpollEvent) == -1) {
-                        std::cout << "ccc" << std::endl;
-                        throw errno;
+                                  &epollEvent) == -1) {
+                        throw common::BillingException("epoll register connection socket failed",errno);
                     }
                 } else {
                     int connFd = events[n].data.fd;

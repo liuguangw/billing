@@ -32,6 +32,7 @@ namespace services {
             close(this->serverSockFd);
         }
         for (auto &tcpConnection: this->tcpConnections) {
+            tcpConnection.second->needStop = true;
             delete tcpConnection.second;
         }
     }
@@ -183,30 +184,41 @@ namespace services {
             this->logger.errorLn(msg.str().c_str());
             return;
         }
-        //分配空间,放入连接map中
+        //分配空间
         auto tcpConn = new TcpConnection(connFd);
+        //启动连接处理子线程
         try {
             tcpConn->startWorkingThread();
         } catch (common::BillingException &ex) {
+            delete tcpConn;
             std::stringstream msg;
             msg << "start working thread failed: " << strerror(errno);
             this->logger.errorLn(msg.str().c_str());
             return;
         }
+        //放入map中
         this->tcpConnections[connFd] = tcpConn;
+        this->logger.infoLn("accept ok");
     }
 
     void Server::processConnEvent(epoll_event *connEvent, unsigned char *buff) {
         using common::IoStatus;
         int connFd = connEvent->data.fd;
         auto tcpConn = this->tcpConnections[connFd];
-        //
+        //可写
         if ((connEvent->events & EPOLLOUT) != 0) {
+            tcpConn->lock(false);
             tcpConn->setWriteAble(true);
+            tcpConn->unlock(false);
         }
+        //可读
         if ((connEvent->events & EPOLLIN) != 0) {
+            tcpConn->lock(true);
             auto ioStatus = tcpConn->readAll(buff, buffSize);
+            tcpConn->unlock(true);
             if (ioStatus != IoStatus::Ok) {
+                //读取出现问题
+                tcpConn->needStop = true;
                 std::stringstream ss;
                 if (ioStatus == IoStatus::Error) {
                     ss << "read client(fd:" << connFd << ") error," << strerror(errno);
@@ -215,6 +227,7 @@ namespace services {
                     ss << "read client(fd:" << connFd << ") disconnected";
                     this->logger.infoLn(ss.str().c_str());
                 }
+                //释放空间
                 this->tcpConnections.erase(connFd);
                 delete tcpConn;
                 return;

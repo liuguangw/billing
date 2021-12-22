@@ -14,10 +14,10 @@
 #include "tcp_connection.h"
 
 namespace services {
-    //读写时buffer的大小
-    const size_t buffSize = 4096;
     class Server {
     private:
+        //读写时buffer的大小
+        const size_t buffSize = 4096;
         common::ServerConfig serverConfig;
         Logger logger;
         DatabaseConnection *databaseConnection = nullptr;

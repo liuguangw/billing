@@ -35,6 +35,8 @@ namespace services {
         //初始化tcp监听
         void initListener();
 
+        void runLoop();
+
         //接受tcp连接
         void processAcceptConnEvent(epoll_event *connEvent);
 
@@ -49,8 +51,6 @@ namespace services {
         void initLogger(const char *logFilePath);
 
         int run();
-
-        int runLoop();
     };
 }
 

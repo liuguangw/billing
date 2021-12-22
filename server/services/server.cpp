@@ -140,7 +140,7 @@ namespace services {
         return EXIT_SUCCESS;
     }
 
-    int Server::runLoop() {
+    void Server::runLoop() {
         const int MAX_EVENTS = 20;
         epoll_event events[MAX_EVENTS];
         int fdCount;
@@ -155,7 +155,7 @@ namespace services {
                 if (fd == this->signalFd) {
                     //收到停止信号了
                     this->logger.infoLn("get stop signal");
-                    return EXIT_SUCCESS;
+                    return;
                 } else if (fd == this->serverSockFd) {
                     this->processAcceptConnEvent(&events[n]);
                 } else {
@@ -185,6 +185,14 @@ namespace services {
         }
         //分配空间,放入连接map中
         auto tcpConn = new TcpConnection(connFd);
+        try {
+            tcpConn->startWorkingThread();
+        } catch (common::BillingException &ex) {
+            std::stringstream msg;
+            msg << "start working thread failed: " << strerror(errno);
+            this->logger.errorLn(msg.str().c_str());
+            return;
+        }
         this->tcpConnections[connFd] = tcpConn;
     }
 

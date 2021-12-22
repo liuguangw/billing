@@ -9,14 +9,18 @@
 #include <vector>
 #include <iostream>
 #include "../common/io_status.h"
+#include <pthread.h>
 
 namespace services {
+    void* processTcpData(void* arg);
     class TcpConnection {
     private:
         int connFd;
-        bool writeAble= false;
+        bool writeAble = false;
+        pthread_t threadT = 0;
         std::vector<unsigned char> inputData;
         std::vector<unsigned char> outputData;
+        void processData();
     public:
         explicit TcpConnection(int fd) : connFd(fd) {
             std::cout << "TcpConnection construct fd:" << fd << std::endl;
@@ -28,9 +32,12 @@ namespace services {
             this->writeAble = s;
         }
 
+        void startWorkingThread();
+
         common::IoStatus readAll(unsigned char *buff, size_t nBytes);
 
         common::IoStatus writeAll();
+        friend void* processTcpData(void* arg);
     };
 }
 

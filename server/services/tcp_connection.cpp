@@ -7,12 +7,18 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <iostream>
+#include <functional>
+#include <csignal>
 
 namespace services {
     using common::IoStatus;
 
     TcpConnection::~TcpConnection() {
         close(this->connFd);
+        if (this->threadT != 0) {
+            pthread_cancel(this->threadT);
+            std::cout << "stop child thread fd:" << this->connFd << std::endl;
+        }
         std::cout << "TcpConnection destroy fd:" << this->connFd << std::endl;
     }
 
@@ -41,5 +47,30 @@ namespace services {
             std::cout << "====================================================" << std::endl;
             return IoStatus::Ok;
         }
+    }
+
+    //启动工作线程
+    void TcpConnection::startWorkingThread() {
+        pthread_attr_t attr;
+        if (pthread_attr_init(&attr) != 0) {
+            throw common::BillingException("init pthread attr failed", errno);
+        }
+        if (pthread_create(&this->threadT, &attr,&processTcpData, this) != 0) {
+            throw common::BillingException("create thread failed", errno);
+        }
+    }
+
+    void TcpConnection::processData() {
+        std::cout <<"["<< this->threadT<< "]hello this is child !" << std::endl;
+    }
+
+    void *processTcpData(void* arg) {
+        auto tcpConn = static_cast<TcpConnection*>(arg);
+        tcpConn->processData();
+        for(int i=0;i<20;i++){
+            std::cout <<std::dec<<"...."<< i<< std::endl;
+            sleep(1);
+        }
+        return nullptr;
     }
 }

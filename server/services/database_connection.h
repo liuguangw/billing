@@ -23,8 +23,8 @@ namespace services {
          * @param db 数据库名称
          * @param port 端口
          */
-        DatabaseConnection(common::ServerConfig *serverConfig) : serverConfig(serverConfig),reConnect(true) {
-            mysql = mysql_init(NULL);
+        explicit DatabaseConnection(common::ServerConfig *serverConfig) : serverConfig(serverConfig),reConnect(true) {
+            mysql = mysql_init(nullptr);
         }
 
         /**

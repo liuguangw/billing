@@ -23,7 +23,7 @@ namespace common {
 
         BillingException(const char *title, int errorCode);
 
-        virtual const char *what() const throw() {
+        const char *what() const noexcept override {
             return this->message.c_str();
         }
     };

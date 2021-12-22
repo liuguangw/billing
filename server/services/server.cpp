@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/signalfd.h>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -19,20 +20,19 @@
 
 
 namespace services {
-    Server::Server() {
-        this->serverSockFd = -1;
-        this->epollFd = -1;
-    }
-
     Server::~Server() {
-        if (this->databaseConnection != nullptr) {
-            delete this->databaseConnection;
-        }
+        delete this->databaseConnection;
         if (this->epollFd != -1) {
             close(this->epollFd);
         }
+        if (this->signalFd != -1) {
+            close(this->signalFd);
+        }
         if (this->serverSockFd != -1) {
             close(this->serverSockFd);
+        }
+        for (auto &tcpConnection: this->tcpConnections) {
+            delete tcpConnection.second;
         }
     }
 
@@ -49,11 +49,44 @@ namespace services {
         this->databaseConnection->connect();
     }
 
+    void Server::initEpoll() {
+        this->epollFd = epoll_create1(0);
+        if (this->epollFd == -1) {
+            throw common::BillingException("init epoll fd failed", errno);
+        }
+    }
+
+    void Server::initSignal() {
+        //阻塞信号
+        sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGINT);
+        sigaddset(&mask, SIGQUIT);
+        sigaddset(&mask, SIGTERM);
+        if (sigprocmask(SIG_BLOCK, &mask, nullptr) != 0) {
+            throw common::BillingException("block signal failed", errno);
+        }
+        //fd关注的信号类型
+        this->signalFd = signalfd(-1, &mask, SFD_NONBLOCK);
+        if (this->signalFd < 0) {
+            throw common::BillingException("init signal failed", errno);
+        }
+        //注册事件
+        epoll_event epollEvent{};
+        epollEvent.events = EPOLLIN;
+        epollEvent.data.fd = this->signalFd;
+        if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, this->signalFd, &epollEvent) == -1) {
+            throw common::BillingException("epoll register signal failed", errno);
+        }
+    }
+
     void Server::initListener() {
         this->serverSockFd = socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
         if (this->serverSockFd < 0) {
             throw common::BillingException("init server socket failed", errno);
         }
+        int option = 1;
+        setsockopt(this->serverSockFd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
         sockaddr_in serverAddress{};
         serverAddress.sin_family = AF_INET;
         serverAddress.sin_addr.s_addr = inet_addr(this->serverConfig.IP.c_str());
@@ -63,11 +96,6 @@ namespace services {
         }
         if (listen(this->serverSockFd, 10) < 0) {
             throw common::BillingException("server socket listen failed", errno);
-        }
-        //初始化epoll
-        this->epollFd = epoll_create1(0);
-        if (this->epollFd == -1) {
-            throw common::BillingException("init epoll fd failed", errno);
         }
         //注册事件
         epoll_event epollEvent{};
@@ -90,6 +118,8 @@ namespace services {
         this->logger.infoLn(serverVersionInfo.c_str());*/
         //
         try {
+            this->initEpoll();
+            this->initSignal();
             this->initListener();
         } catch (common::BillingException &ex) {
             this->logger.errorLn(ex.what());
@@ -103,11 +133,9 @@ namespace services {
         try {
             this->runLoop();
         } catch (common::BillingException &ex) {
-            this->freeAllConnections();
             this->logger.errorLn(ex.what());
             return EXIT_FAILURE;
         }
-        this->freeAllConnections();
         this->logger.infoLn("server stopped");
         return EXIT_SUCCESS;
     }
@@ -115,53 +143,61 @@ namespace services {
     int Server::runLoop() {
         const int MAX_EVENTS = 20;
         epoll_event events[MAX_EVENTS];
-        epoll_event epollEvent{};
         int fdCount;
-        const size_t buffSize = 4096;
         unsigned char buff[buffSize];
-        //signal
-        sigset_t stopSignal{},outputSignal{};
-        sigemptyset(&stopSignal);
-        sigaddset(&stopSignal,SIGINT);
-        sigaddset(&stopSignal,SIGTERM);
-        sigprocmask(SIG_BLOCK,&stopSignal,&outputSignal);
         while (true) {
-            fdCount = epoll_pwait(this->epollFd, events, MAX_EVENTS, 5000,&stopSignal);
+            fdCount = epoll_wait(this->epollFd, events, MAX_EVENTS, -1);
             if (fdCount < 0) {
-                if(errno == EINTR){
-                    this->logger.infoLn("get signal");
-                    break;
-                }
                 throw common::BillingException("epoll wait failed", errno);
             }
-            this->logger.infoLn("get wait result");
-
             for (int n = 0; n < fdCount; ++n) {
-                int connFd = events[n].data.fd;
-                if (connFd == this->serverSockFd) {
-                    auto tcpConn = new TcpConnection;
-                    try {
-                        tcpConn->initConnection(this->epollFd, connFd, &epollEvent);
-                    } catch (common::BillingException &ex) {
-                        delete tcpConn;
-                        this->logger.errorLn(ex.what());
-                        continue;
-                    }
-                    this->tcpConnections[tcpConn->getConnFd()] = tcpConn;
+                int fd = events[n].data.fd;
+                if (fd == this->signalFd) {
+                    //收到停止信号了
+                    this->logger.infoLn("get stop signal");
+                    return EXIT_SUCCESS;
+                } else if (fd == this->serverSockFd) {
+                    this->processAcceptConnEvent(&events[n]);
                 } else {
-                    this->processConnEvent(&events[n], buff, buffSize);
+                    this->processConnEvent(&events[n], buff);
                 }
             }
         }
-        return EXIT_SUCCESS;
     }
 
-    void Server::processConnEvent(epoll_event *connEvent, unsigned char *buff, size_t nBytes) {
+    void Server::processAcceptConnEvent(epoll_event *connEvent) {
+        int connFd = accept4(this->serverSockFd,
+                             (struct sockaddr *) nullptr, nullptr, SOCK_NONBLOCK);
+        if (connFd < 0) {
+            std::stringstream msg;
+            msg << "accept connection failed: " << strerror(errno);
+            this->logger.errorLn(msg.str().c_str());
+            return;
+        }
+        //为tcp连接注册事件
+        connEvent->events = EPOLLIN | EPOLLOUT | EPOLLET;
+        connEvent->data.fd = connFd;
+        if (epoll_ctl(epollFd, EPOLL_CTL_ADD, connFd, connEvent) == -1) {
+            std::stringstream msg;
+            msg << "epoll register connection socket failed: " << strerror(errno);
+            this->logger.errorLn(msg.str().c_str());
+            return;
+        }
+        //分配空间,放入连接map中
+        auto tcpConn = new TcpConnection(connFd);
+        this->tcpConnections[connFd] = tcpConn;
+    }
+
+    void Server::processConnEvent(epoll_event *connEvent, unsigned char *buff) {
         using common::IoStatus;
         int connFd = connEvent->data.fd;
         auto tcpConn = this->tcpConnections[connFd];
+        //
+        if ((connEvent->events & EPOLLOUT) != 0) {
+            tcpConn->setWriteAble(true);
+        }
         if ((connEvent->events & EPOLLIN) != 0) {
-            auto ioStatus = tcpConn->readAll(buff, nBytes);
+            auto ioStatus = tcpConn->readAll(buff, buffSize);
             if (ioStatus != IoStatus::Ok) {
                 std::stringstream ss;
                 if (ioStatus == IoStatus::Error) {
@@ -175,15 +211,6 @@ namespace services {
                 delete tcpConn;
                 return;
             }
-        }
-        if ((connEvent->events & EPOLLOUT) != 0) {
-            tcpConn->setWriteAble(true);
-        }
-    }
-
-    void Server::freeAllConnections() {
-        for(auto it=this->tcpConnections.begin();it!= this->tcpConnections.end();it++){
-            delete it->second;
         }
     }
 }

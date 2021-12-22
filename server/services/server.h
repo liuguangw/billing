@@ -14,24 +14,34 @@
 #include "tcp_connection.h"
 
 namespace services {
+    //读写时buffer的大小
+    const size_t buffSize = 4096;
     class Server {
     private:
         common::ServerConfig serverConfig;
         Logger logger;
-        DatabaseConnection *databaseConnection;
-        int serverSockFd, epollFd;
-        std::map<int,TcpConnection*> tcpConnections;
+        DatabaseConnection *databaseConnection = nullptr;
+        int signalFd = -1, serverSockFd = -1, epollFd = -1;
+        std::map<int, TcpConnection *> tcpConnections;
 
         void initDatabase();
 
+        //初始化epoll
+        void initEpoll();
+
+        //初始化信号fd
+        void initSignal();
+
+        //初始化tcp监听
         void initListener();
 
-        void processConnEvent(epoll_event* connEvent,unsigned char *buff, size_t nBytes);
-        void freeAllConnections();
+        //接受tcp连接
+        void processAcceptConnEvent(epoll_event *connEvent);
+
+        //处理tcp连接的事件
+        void processConnEvent(epoll_event *connEvent, unsigned char *buff);
 
     public:
-        Server();
-
         ~Server();
 
         void initConfig(const char *configFilePath);

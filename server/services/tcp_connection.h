@@ -14,21 +14,15 @@ namespace services {
     class TcpConnection {
     private:
         int connFd;
-        bool writeAble;
+        bool writeAble= false;
         std::vector<unsigned char> inputData;
         std::vector<unsigned char> outputData;
     public:
-        TcpConnection() : connFd(-1) {
-            std::cout << "TcpConnection construct" << std::endl;
+        explicit TcpConnection(int fd) : connFd(fd) {
+            std::cout << "TcpConnection construct fd:" << fd << std::endl;
         }
 
         ~TcpConnection();
-
-        inline int getConnFd() {
-            return this->connFd;
-        }
-
-        void initConnection(int epollFd, int serverSockFd, epoll_event *epollEvent);
 
         void setWriteAble(bool s) {
             this->writeAble = s;

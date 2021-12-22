@@ -11,5 +11,5 @@ namespace common {
         Error,
         Disconnected
  };
-};
+}
 #endif //BILLING_IO_STATUS_H

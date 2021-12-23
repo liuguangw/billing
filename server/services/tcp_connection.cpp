@@ -4,6 +4,7 @@
 
 #include "tcp_connection.h"
 #include "../common/billing_exception.h"
+#include "../bhandler/connect_handler.h"
 #include "fill_buffer.h"
 #include <unistd.h>
 #include <sys/socket.h>
@@ -45,7 +46,7 @@ namespace services {
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
             //debug
-            std::cout << "====================================================" << std::endl;
+            std::cout << "r====================================================" << std::endl;
             for (std::size_t i = 0; i < this->inputData.size(); i++) {
                 std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) this->inputData[i]
                           << " ";
@@ -53,7 +54,7 @@ namespace services {
                     std::cout << std::endl;
                 }
             }
-            std::cout << "====================================================" << std::endl;
+            std::cout << "r====================================================" << std::endl;
         }
     }
 
@@ -67,7 +68,7 @@ namespace services {
             }
             writeCount = write(this->connFd, buff, fillCount);
             writeCountTotal += writeCount;
-            std::cout << "writeCount: " << writeCount << std::endl;
+            std::cout << "writeCount: " << std::dec << writeCount << std::endl;
             if (writeCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                     result = IoStatus::Pending;
@@ -78,12 +79,22 @@ namespace services {
             } else if (writeCount == 0) {
                 return IoStatus::Disconnected;
             }
+            //debug
+            std::cout << "w====================================================" << std::endl;
+            for (std::size_t i = 0; i < writeCount; i++) {
+                std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) buff[i]
+                          << " ";
+                if ((i % 16 == 15) || (i == writeCount - 1)) {
+                    std::cout << std::endl;
+                }
+            }
+            std::cout << "w====================================================" << std::endl;
         }
         if (writeCountTotal > 0) {
             //删除左侧已经发送了的数据
             if (writeCountTotal < this->outputData.size()) {
                 auto it = this->outputData.begin();
-                this->outputData.erase(it, it + (int)writeCountTotal);
+                this->outputData.erase(it, it + (int) writeCountTotal);
             } else {
                 //全部发送完了,直接清空
                 this->outputData.clear();
@@ -99,6 +110,8 @@ namespace services {
 
     void TcpConnection::initPacketHandlers() {
         //todo add handlers
+        common::PacketHandler *handler = new bhandler::ConnectHandler;
+        this->addHandler(handler);
     }
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
@@ -118,7 +131,7 @@ namespace services {
             size_t parseTotalSize = 0;
             common::PacketHandler *handler;
             while (true) {
-                parseResult = request.load(&this->inputData);
+                parseResult = request.load(&this->inputData, parseTotalSize);
                 if (parseResult == 1) {
                     //数据包结构不完整,跳出while解析循环
                     break;
@@ -133,13 +146,15 @@ namespace services {
                 try {
                     handler = this->packetHandlers.at(request.opType);
                 } catch (std::out_of_range &ex) {
-                    std::cout << "invalid opType: " << request.opType << std::endl;
+                    std::cout << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
+                              << std::hex << (int) request.opType << std::endl;
                     break;
                 }
                 responsePtr = handler->getResponse(&request);
                 responsePtr->putData(&this->outputData);
+                delete responsePtr;
                 if (writeAble) {
-                    std::cout << "writeAll" << std::endl;
+                    std::cout << "writeAll.1" << std::endl;
                     auto status = this->writeAll(buffer);
                     if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
                         return false;
@@ -153,7 +168,7 @@ namespace services {
                 //删除左侧已经解析了的数据
                 if (parseTotalSize < this->inputData.size()) {
                     auto it = this->inputData.begin();
-                    this->outputData.erase(it, it + (int)parseTotalSize);
+                    this->outputData.erase(it, it + (int) parseTotalSize);
                 } else {
                     //全部解析完了,直接清空
                     this->inputData.clear();
@@ -162,7 +177,7 @@ namespace services {
         }
         //
         if (writeAble && !this->outputData.empty()) {
-            std::cout << "writeAll" << std::endl;
+            std::cout << "writeAll.2" << std::endl;
             auto status = this->writeAll(buffer);
             if (status != IoStatus::Ok) {
                 return false;

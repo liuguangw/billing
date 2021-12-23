@@ -7,13 +7,13 @@
 #include "billing_packet.h"
 
 namespace common {
-    unsigned int BillingPacket::load(std::vector<unsigned char> *source) {
+    unsigned int BillingPacket::load(std::vector<unsigned char> *source, size_t offset) {
         this->opData.clear();
-        auto sourceSize = source->size();
+        auto sourceSize = source->size() - offset;
         if (sourceSize < PACKET_MIN_SIZE) {
             return 1;
         }
-        auto it = source->begin();
+        auto it = source->begin() + offset;
         //头部检测
         if (*it != MASK0) {
             return 2;
@@ -43,10 +43,10 @@ namespace common {
         this->msgID <<= 8;
         it++;
         this->msgID += *it;
-        if (dataLength > 0) {
-            this->opData.reserve(dataLength);
+        if (opDataLength > 0) {
+            this->opData.reserve(opDataLength);
             it++;
-            this->opData.insert(this->opData.begin(), it, it + dataLength);
+            this->opData.insert(this->opData.begin(), it, it + (int) opDataLength);
         }
         return 0;
     }
@@ -107,8 +107,8 @@ namespace common {
     }
 
     void BillingPacket::appendOpData(std::string &data) {
-        for (char & it : data) {
-            this->opData.push_back((unsigned char)it);
+        for (char &it: data) {
+            this->opData.push_back((unsigned char) it);
         }
     }
 }

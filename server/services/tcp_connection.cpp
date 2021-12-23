@@ -16,21 +16,22 @@
 namespace services {
     using common::IoStatus;
 
-    TcpConnection::TcpConnection(int fd, Logger *logger) : connFd(fd), logger(logger) {
+    TcpConnection::TcpConnection(int fd, HandlerResource *hResource) : connFd(fd), handlerResource(hResource) {
         this->initPacketHandlers();
         std::stringstream ss;
         ss << "TcpConnection::TcpConnection fd:" << fd;
-        logger->infoLn(&ss);
+        this->handlerResource->logger()->infoLn(&ss);
     }
 
     TcpConnection::~TcpConnection() {
-        this->logger->infoLn("TcpConnection::~TcpConnection");
+        auto logger = this->handlerResource->logger();
+        logger->infoLn("TcpConnection::~TcpConnection");
         for (auto &pair: this->packetHandlers) {
             delete pair.second;
         }
         close(this->connFd);
         std::stringstream ss;
-        ss<< "TcpConnection destroy fd:" << this->connFd ;
+        ss << "TcpConnection destroy fd:" << this->connFd;
         logger->infoLn(&ss);
     }
 
@@ -38,10 +39,11 @@ namespace services {
         ssize_t readCount;
         //debug
         std::stringstream ss;
+        auto logger = this->handlerResource->logger();
         while (true) {
             readCount = read(this->connFd, buff, buffSize);
             ss << "readCount: " << std::dec << readCount;
-            this->logger->infoLn(&ss);
+            logger->infoLn(&ss);
             if (readCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                     return IoStatus::Pending;
@@ -54,17 +56,17 @@ namespace services {
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
             //debug
-            this->logger->infoLn("read start==========================================");
+            logger->infoLn("read start==========================================");
             ss.str("");
             for (std::size_t i = 0; i < this->inputData.size(); i++) {
                 ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) this->inputData[i]
-                          << " ";
+                   << " ";
                 if ((i % 16 == 15) || (i == this->inputData.size() - 1)) {
-                    this->logger->infoLn(&ss);
+                    logger->infoLn(&ss);
                     ss.str("");
                 }
             }
-            this->logger->infoLn("read end============================================");
+            logger->infoLn("read end============================================");
         }
     }
 
@@ -73,6 +75,7 @@ namespace services {
         IoStatus result = IoStatus::Ok;
         //debug
         std::stringstream ss;
+        auto logger = this->handlerResource->logger();
         while (writeCountTotal < this->outputData.size()) {
             fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, buffSize);
             if (fillCount == 0) {
@@ -81,7 +84,7 @@ namespace services {
             writeCount = write(this->connFd, buff, fillCount);
             writeCountTotal += writeCount;
             ss << "writeCount: " << std::dec << writeCount;
-            this->logger->infoLn(&ss);
+            logger->infoLn(&ss);
             if (writeCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                     result = IoStatus::Pending;
@@ -93,17 +96,17 @@ namespace services {
                 return IoStatus::Disconnected;
             }
             //debug
-            this->logger->infoLn("write start==========================================");
+            logger->infoLn("write start==========================================");
             ss.str("");
             for (std::size_t i = 0; i < writeCount; i++) {
                 ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) buff[i]
                    << " ";
                 if ((i % 16 == 15) || (i == writeCount - 1)) {
-                    this->logger->infoLn(&ss);
+                    logger->infoLn(&ss);
                     ss.str("");
                 }
             }
-            this->logger->infoLn("write end============================================");
+            logger->infoLn("write end============================================");
         }
         if (writeCountTotal > 0) {
             //删除左侧已经发送了的数据
@@ -127,7 +130,7 @@ namespace services {
         //todo add handlers
         common::PacketHandler *handler = new bhandler::ConnectHandler;
         this->addHandler(handler);
-        handler = new bhandler::PingHandler;
+        handler = new bhandler::PingHandler(this->handlerResource);
         this->addHandler(handler);
     }
 
@@ -135,8 +138,9 @@ namespace services {
         unsigned char buffer[buffSize];
         //debug
         std::stringstream ss;
+        auto logger = this->handlerResource->logger();
         if (readAble) {
-            this->logger->infoLn("readAll");
+            logger->infoLn("readAll");
             auto status = this->readAll(buffer);
             if (status != IoStatus::Pending) {
                 return false;
@@ -156,25 +160,27 @@ namespace services {
                 }
                 //格式错误
                 if (parseResult == 2) {
-                    this->logger->errorLn("invalid packet");
+                    logger->errorLn("invalid packet");
                     return false;
                 }
                 parseTotalSize += request.fullLength();
-                request.dumpInfo();
+                ss.str("");
+                request.dumpInfo(ss);
+                logger->infoLn(&ss);
                 try {
                     handler = this->packetHandlers.at(request.opType);
                 } catch (std::out_of_range &ex) {
                     ss.str("");
-                    ss<< "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
-                              << std::hex << (int) request.opType ;
-                    this->logger->errorLn(&ss);
+                    ss << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
+                       << std::hex << (int) request.opType;
+                    logger->errorLn(&ss);
                     break;
                 }
                 response.prepareResponse(&request);
                 handler->loadResponse(&request, &response);
                 response.putData(&this->outputData);
                 if (writeAble) {
-                    this->logger->infoLn("writeAll.1");
+                    logger->infoLn("writeAll.1");
                     auto status = this->writeAll(buffer);
                     if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
                         return false;
@@ -197,9 +203,9 @@ namespace services {
         }
         //
         if (writeAble && !this->outputData.empty()) {
-            this->logger->infoLn("writeAll.2");
+            logger->infoLn("writeAll.2");
             auto status = this->writeAll(buffer);
-            if (status != IoStatus::Ok) {
+            if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
                 return false;
             }
         }

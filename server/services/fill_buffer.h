@@ -5,7 +5,7 @@
 
 namespace services{
     template <class T>
-    size_t fillBuffer(std::vector<T> *source, size_t offset, T *buff, size_t nBytes){
+    size_t fillBuffer(const std::vector<T> *source, size_t offset, T *buff, size_t nBytes){
         size_t fillCount = 0;
         if (source->empty()) {
             return fillCount;

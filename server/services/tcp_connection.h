@@ -8,6 +8,7 @@
 #include "../common/io_status.h"
 #include "../common/packet_handler.h"
 #include "logger.h"
+#include "handler_resource.h"
 #include <sys/epoll.h>
 #include <map>
 #include <iostream>
@@ -17,7 +18,7 @@ namespace services {
     class TcpConnection {
     private:
         int connFd;
-        Logger* logger;
+        HandlerResource *handlerResource;
         std::vector<unsigned char> inputData;
         std::vector<unsigned char> outputData;
         std::map<unsigned char, common::PacketHandler *> packetHandlers;
@@ -37,7 +38,7 @@ namespace services {
         //读写时buffer的大小
         static const size_t buffSize = 1024;
 
-        explicit TcpConnection(int fd,Logger* logger);
+        explicit TcpConnection(int fd,HandlerResource *hResource);
 
         ~TcpConnection();
 

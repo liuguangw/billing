@@ -12,17 +12,14 @@
 #include "database_connection.h"
 #include "logger.h"
 #include "tcp_connection.h"
+#include "handler_resource.h"
 
 namespace services {
     class Server {
     private:
-        common::ServerConfig serverConfig;
-        Logger logger;
-        DatabaseConnection *databaseConnection = nullptr;
+        HandlerResource handlerResource;
         int signalFd = -1, serverSockFd = -1, epollFd = -1;
         std::map<int, TcpConnection *> tcpConnections;
-
-        void initDatabase();
 
         //初始化epoll
         void initEpoll();
@@ -44,9 +41,7 @@ namespace services {
     public:
         ~Server();
 
-        void initConfig(const char *configFilePath);
-
-        void initLogger(const char *logFilePath);
+        void initResource(const char *configFilePath,const char *logFilePath);
 
         int run();
     };

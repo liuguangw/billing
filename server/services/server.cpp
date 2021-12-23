@@ -3,7 +3,6 @@
 //
 
 #include "server.h"
-#include "load_server_config.h"
 #include "../common/billing_exception.h"
 #include <string>
 #include <sys/epoll.h>
@@ -21,7 +20,6 @@
 
 namespace services {
     Server::~Server() {
-        delete this->databaseConnection;
         if (this->epollFd != -1) {
             close(this->epollFd);
         }
@@ -34,19 +32,6 @@ namespace services {
         for (auto &tcpConnection: this->tcpConnections) {
             delete tcpConnection.second;
         }
-    }
-
-    void Server::initConfig(const char *configFilePath) {
-        loadServerConfig(configFilePath, &this->serverConfig);
-    }
-
-    void Server::initLogger(const char *logFilePath) {
-        this->logger.initLogger(logFilePath);
-    }
-
-    void Server::initDatabase() {
-        this->databaseConnection = new DatabaseConnection(&this->serverConfig);
-        this->databaseConnection->connect();
     }
 
     void Server::initEpoll() {
@@ -89,8 +74,9 @@ namespace services {
         setsockopt(this->serverSockFd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
         sockaddr_in serverAddress{};
         serverAddress.sin_family = AF_INET;
-        serverAddress.sin_addr.s_addr = inet_addr(this->serverConfig.IP.c_str());
-        serverAddress.sin_port = htons(this->serverConfig.Port);
+        auto serverConfig=this->handlerResource.config();
+        serverAddress.sin_addr.s_addr = inet_addr(serverConfig->IP.c_str());
+        serverAddress.sin_port = htons(serverConfig->Port);
         if (bind(this->serverSockFd, (sockaddr *) &serverAddress, sizeof(serverAddress)) < 0) {
             throw common::BillingException("server socket bind failed", errno);
         }
@@ -107,6 +93,7 @@ namespace services {
     }
 
     int Server::run() {
+        auto logger=this->handlerResource.logger();
         /*try {
             this->initDatabase();
         } catch (common::BillingException &ex) {
@@ -122,21 +109,22 @@ namespace services {
             this->initSignal();
             this->initListener();
         } catch (common::BillingException &ex) {
-            this->logger.errorLn(ex.what());
+            logger->errorLn(ex.what());
             return EXIT_FAILURE;
         }
         {
+            auto serverConfig=this->handlerResource.config();
             std::stringstream listenAddress;
-            listenAddress << this->serverConfig.IP.c_str() << ":" << this->serverConfig.Port;
-            this->logger.infoLn(listenAddress.str().c_str());
+            listenAddress << serverConfig->IP.c_str() << ":" <<serverConfig->Port;
+            this->handlerResource.logger()->infoLn(listenAddress.str().c_str());
         }
         try {
             this->runLoop();
         } catch (common::BillingException &ex) {
-            this->logger.errorLn(ex.what());
+            logger->errorLn(ex.what());
             return EXIT_FAILURE;
         }
-        this->logger.infoLn("server stopped");
+        logger->infoLn("server stopped");
         return EXIT_SUCCESS;
     }
 
@@ -153,7 +141,7 @@ namespace services {
                 int fd = events[n].data.fd;
                 if (fd == this->signalFd) {
                     //收到停止信号了
-                    this->logger.infoLn("get stop signal");
+                    this->handlerResource.logger()->infoLn("get stop signal");
                     return;
                 } else if (fd == this->serverSockFd) {
                     this->processAcceptConnEvent(&events[n]);
@@ -165,12 +153,13 @@ namespace services {
     }
 
     void Server::processAcceptConnEvent(epoll_event *connEvent) {
+        auto logger=this->handlerResource.logger();
         int connFd = accept4(this->serverSockFd,
                              (struct sockaddr *) nullptr, nullptr, SOCK_NONBLOCK);
         if (connFd < 0) {
             std::stringstream msg;
             msg << "accept connection failed: " << strerror(errno);
-            this->logger.errorLn(msg.str().c_str());
+            logger->errorLn(msg.str().c_str());
             return;
         }
         //为tcp连接注册事件
@@ -179,13 +168,13 @@ namespace services {
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, connFd, connEvent) == -1) {
             std::stringstream msg;
             msg << "epoll register connection socket failed: " << strerror(errno);
-            this->logger.errorLn(msg.str().c_str());
+            logger->errorLn(msg.str().c_str());
             return;
         }
         //分配空间,放入map中
-        auto tcpConn = new TcpConnection(connFd, &this->logger);
+        auto tcpConn = new TcpConnection(connFd, &this->handlerResource);
         this->tcpConnections[connFd] = tcpConn;
-        this->logger.infoLn("accept ok");
+        logger->infoLn("accept ok");
     }
 
     void Server::processConnEvent(epoll_event *connEvent) {
@@ -197,5 +186,9 @@ namespace services {
             this->tcpConnections.erase(connEvent->data.fd);
             delete tcpConn;
         }
+    }
+
+    void Server::initResource(const char *configFilePath, const char *logFilePath) {
+        this->handlerResource.initResource(configFilePath,logFilePath);
     }
 }

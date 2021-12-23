@@ -7,7 +7,6 @@ namespace bhandler {
     using common::BillingPacket;
 
     void ConnectHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        response->opData.push_back((unsigned char)0x20);
-        response->opData.push_back((unsigned char)0x00);
+        response->appendOpData((unsigned short )0x2000);
     }
 }

@@ -20,7 +20,7 @@ namespace common {
         if (sourceSize < PACKET_MIN_SIZE) {
             return 1;
         }
-        auto it = source->begin() + offset;
+        auto it = source->begin() + (int)offset;
         //头部检测
         if (*it != MASK0) {
             return 2;
@@ -58,22 +58,22 @@ namespace common {
         return 0;
     }
 
-    void BillingPacket::dumpInfo() {
-        std::cout << "====================================================" << std::endl;
-        std::cout << "BillingPacket::dumpInfo" << std::endl;
-        std::cout << "opType: 0x" << std::setfill('0') << std::setw(2) << std::right
+    void BillingPacket::dumpInfo(std::stringstream& ss) {
+        ss<<"BillingPacket::dumpInfo"<<std::endl;
+        ss << "====================================================" << std::endl;
+        ss << "opType: 0x" << std::setfill('0') << std::setw(2) << std::right
                   << std::hex << (int) this->opType << std::endl;
-        std::cout << "msgID: 0x" << std::setfill('0') << std::setw(4) << std::right
+        ss << "msgID: 0x" << std::setfill('0') << std::setw(4) << std::right
                   << std::hex << this->msgID << std::endl;
-        std::cout << "opData:" << std::endl;
+        ss << "opData:" << std::endl;
         for (std::size_t i = 0; i < this->opData.size(); i++) {
-            std::cout << std::setfill('0') << std::setw(2) << std::right
+            ss << std::setfill('0') << std::setw(2) << std::right
                       << std::hex << (int) this->opData[i] << " ";
             if ((i % 16 == 15) || (i == this->opData.size() - 1)) {
-                std::cout << std::endl;
+                ss << std::endl;
             }
         }
-        std::cout << "====================================================" << std::endl;
+        ss << "====================================================";
     }
 
     void BillingPacket::putData(std::vector<unsigned char> *outputData) {

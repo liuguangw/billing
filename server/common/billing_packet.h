@@ -61,11 +61,7 @@ namespace common {
         //写入数据
         void putData(std::vector<unsigned char> *outputData);
 
-        void dumpInfo();
-
-        ~BillingPacket() {
-            std::cout << "BillingPacket destroy" << std::endl;
-        }
+        void dumpInfo(std::stringstream& ss);
     };
 }
 

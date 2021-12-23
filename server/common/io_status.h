@@ -7,8 +7,13 @@
 
 namespace common {
     enum IoStatus{
+        //成功
         Ok,
+        //失败
         Error,
+        //暂时无法读取或者写入
+        Pending,
+        //连接断开了
         Disconnected
  };
 }

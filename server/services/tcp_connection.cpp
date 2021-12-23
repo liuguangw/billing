@@ -4,20 +4,26 @@
 
 #include "tcp_connection.h"
 #include "../common/billing_exception.h"
-#include "../common/billing_packet.h"
 #include "fill_buffer.h"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <iostream>
-#include <csignal>
 #include <iomanip>
 #include <cstring>
 
 namespace services {
     using common::IoStatus;
 
+    TcpConnection::TcpConnection(int fd) : connFd(fd) {
+        this->initPacketHandlers();
+        std::cout << "TcpConnection::TcpConnection fd:" << fd << std::endl;
+    }
+
     TcpConnection::~TcpConnection() {
         std::cout << "TcpConnection::~TcpConnection" << std::endl;
+        for (auto &pair: this->packetHandlers) {
+            delete pair.second;
+        }
         close(this->connFd);
         std::cout << "TcpConnection destroy fd:" << this->connFd << std::endl;
     }
@@ -29,7 +35,7 @@ namespace services {
             std::cout << "readCount: " << std::dec << readCount << std::endl;
             if (readCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                    return IoStatus::Ok;
+                    return IoStatus::Pending;
                 } else {
                     return IoStatus::Error;
                 }
@@ -51,8 +57,9 @@ namespace services {
         }
     }
 
-    common::IoStatus TcpConnection::writeAll(unsigned char *buff) {
+    IoStatus TcpConnection::writeAll(unsigned char *buff) {
         size_t writeCountTotal = 0, writeCount, fillCount;
+        IoStatus result = IoStatus::Ok;
         while (writeCountTotal < this->outputData.size()) {
             fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, buffSize);
             if (fillCount == 0) {
@@ -63,6 +70,7 @@ namespace services {
             std::cout << "writeCount: " << writeCount << std::endl;
             if (writeCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                    result = IoStatus::Pending;
                     break;
                 } else {
                     return IoStatus::Error;
@@ -75,13 +83,22 @@ namespace services {
             //删除左侧已经发送了的数据
             if (writeCountTotal < this->outputData.size()) {
                 auto it = this->outputData.begin();
-                this->outputData.erase(it, it + writeCountTotal);
+                this->outputData.erase(it, it + (int)writeCountTotal);
             } else {
                 //全部发送完了,直接清空
                 this->outputData.clear();
             }
         }
-        return IoStatus::Ok;
+        return result;
+    }
+
+
+    void TcpConnection::addHandler(common::PacketHandler *handler) {
+        this->packetHandlers[handler->getType()] = handler;
+    }
+
+    void TcpConnection::initPacketHandlers() {
+        //todo add handlers
     }
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
@@ -89,32 +106,62 @@ namespace services {
         if (readAble) {
             std::cout << "readAll" << std::endl;
             auto status = this->readAll(buffer);
-            if (status != IoStatus::Ok) {
+            if (status != IoStatus::Pending) {
                 return false;
             }
         }
         //没有数据需要处理
-        if (this->inputData.empty()) {
-            std::cout << "nothing need process" << std::endl;
-            common::BillingPacket packet;
-            packet.opType=0xE5;
-            packet.msgID=0x1234;
-            const char* msg="112233";
-            for(int i=0;i<strlen(msg);i++){
-                packet.opData.push_back((unsigned char)msg[i]);
-
+        if (!this->inputData.empty()) {
+            common::BillingPacket request;
+            common::BillingPacket *responsePtr;
+            unsigned int parseResult;
+            size_t parseTotalSize = 0;
+            common::PacketHandler *handler;
+            while (true) {
+                parseResult = request.load(&this->inputData);
+                if (parseResult == 1) {
+                    //数据包结构不完整,跳出while解析循环
+                    break;
+                }
+                //格式错误
+                if (parseResult == 2) {
+                    std::cout << "invalid packet" << std::endl;
+                    return false;
+                }
+                parseTotalSize += request.fullLength();
+                request.dumpInfo();
+                try {
+                    handler = this->packetHandlers.at(request.opType);
+                } catch (std::out_of_range &ex) {
+                    std::cout << "invalid opType: " << request.opType << std::endl;
+                    break;
+                }
+                responsePtr = handler->getResponse(&request);
+                responsePtr->putData(&this->outputData);
+                if (writeAble) {
+                    std::cout << "writeAll" << std::endl;
+                    auto status = this->writeAll(buffer);
+                    if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
+                        return false;
+                    }
+                    if (status == IoStatus::Pending) {
+                        writeAble = false;
+                    }
+                }
             }
-            packet.dumpInfo();
-            return true;
+            if (parseTotalSize > 0) {
+                //删除左侧已经解析了的数据
+                if (parseTotalSize < this->inputData.size()) {
+                    auto it = this->inputData.begin();
+                    this->outputData.erase(it, it + (int)parseTotalSize);
+                } else {
+                    //全部解析完了,直接清空
+                    this->inputData.clear();
+                }
+            }
         }
         //
-        std::cout << "process" << std::endl;
-        this->outputData.push_back('[');
-        this->outputData.insert(this->outputData.end(), this->inputData.begin(), this->inputData.end());
-        this->outputData.push_back(']');
-        this->inputData.clear();
-        //
-        if (writeAble) {
+        if (writeAble && !this->outputData.empty()) {
             std::cout << "writeAll" << std::endl;
             auto status = this->writeAll(buffer);
             if (status != IoStatus::Ok) {

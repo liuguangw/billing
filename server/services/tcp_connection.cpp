@@ -42,6 +42,7 @@ namespace services {
         auto logger = this->handlerResource->logger();
         while (true) {
             readCount = read(this->connFd, buff, buffSize);
+            ss.str("");
             ss << "readCount: " << std::dec << readCount;
             logger->infoLn(&ss);
             if (readCount < 0) {
@@ -56,17 +57,20 @@ namespace services {
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
             //debug
-            logger->infoLn("read start==========================================");
+            logger->infoLn("[data]");
+            logger->infoLn("==================================================");
             ss.str("");
-            for (std::size_t i = 0; i < this->inputData.size(); i++) {
-                ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) this->inputData[i]
+            for (std::size_t i = 0; i < readCount; i++) {
+                ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) buff[i]
                    << " ";
-                if ((i % 16 == 15) || (i == this->inputData.size() - 1)) {
+                if ((i % 16 == 15) || (i == readCount - 1)) {
                     logger->infoLn(&ss);
                     ss.str("");
+                }else if(i % 4 == 3){
+                    ss << " ";
                 }
             }
-            logger->infoLn("read end============================================");
+            logger->infoLn("==================================================");
         }
     }
 
@@ -83,6 +87,7 @@ namespace services {
             }
             writeCount = write(this->connFd, buff, fillCount);
             writeCountTotal += writeCount;
+            ss.str("");
             ss << "writeCount: " << std::dec << writeCount;
             logger->infoLn(&ss);
             if (writeCount < 0) {
@@ -96,7 +101,8 @@ namespace services {
                 return IoStatus::Disconnected;
             }
             //debug
-            logger->infoLn("write start==========================================");
+            logger->infoLn("[data]");
+            logger->infoLn("==================================================");
             ss.str("");
             for (std::size_t i = 0; i < writeCount; i++) {
                 ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) buff[i]
@@ -104,9 +110,11 @@ namespace services {
                 if ((i % 16 == 15) || (i == writeCount - 1)) {
                     logger->infoLn(&ss);
                     ss.str("");
+                }else if(i % 4 == 3){
+                    ss << " ";
                 }
             }
-            logger->infoLn("write end============================================");
+            logger->infoLn("==================================================");
         }
         if (writeCountTotal > 0) {
             //删除左侧已经发送了的数据

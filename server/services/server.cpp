@@ -183,7 +183,7 @@ namespace services {
             return;
         }
         //分配空间,放入map中
-        auto tcpConn = new TcpConnection(connFd);
+        auto tcpConn = new TcpConnection(connFd, &this->logger);
         this->tcpConnections[connFd] = tcpConn;
         this->logger.infoLn("accept ok");
     }

@@ -5,6 +5,7 @@
 #include "tcp_connection.h"
 #include "../common/billing_exception.h"
 #include "../bhandler/connect_handler.h"
+#include "../bhandler/ping_handler.h"
 #include "fill_buffer.h"
 #include <unistd.h>
 #include <sys/socket.h>
@@ -15,25 +16,32 @@
 namespace services {
     using common::IoStatus;
 
-    TcpConnection::TcpConnection(int fd) : connFd(fd) {
+    TcpConnection::TcpConnection(int fd, Logger *logger) : connFd(fd), logger(logger) {
         this->initPacketHandlers();
-        std::cout << "TcpConnection::TcpConnection fd:" << fd << std::endl;
+        std::stringstream ss;
+        ss << "TcpConnection::TcpConnection fd:" << fd;
+        logger->infoLn(&ss);
     }
 
     TcpConnection::~TcpConnection() {
-        std::cout << "TcpConnection::~TcpConnection" << std::endl;
+        this->logger->infoLn("TcpConnection::~TcpConnection");
         for (auto &pair: this->packetHandlers) {
             delete pair.second;
         }
         close(this->connFd);
-        std::cout << "TcpConnection destroy fd:" << this->connFd << std::endl;
+        std::stringstream ss;
+        ss<< "TcpConnection destroy fd:" << this->connFd ;
+        logger->infoLn(&ss);
     }
 
     IoStatus TcpConnection::readAll(unsigned char *buff) {
         ssize_t readCount;
+        //debug
+        std::stringstream ss;
         while (true) {
             readCount = read(this->connFd, buff, buffSize);
-            std::cout << "readCount: " << std::dec << readCount << std::endl;
+            ss << "readCount: " << std::dec << readCount;
+            this->logger->infoLn(&ss);
             if (readCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                     return IoStatus::Pending;
@@ -46,21 +54,25 @@ namespace services {
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
             //debug
-            std::cout << "r====================================================" << std::endl;
+            this->logger->infoLn("read start==========================================");
+            ss.str("");
             for (std::size_t i = 0; i < this->inputData.size(); i++) {
-                std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) this->inputData[i]
+                ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) this->inputData[i]
                           << " ";
                 if ((i % 16 == 15) || (i == this->inputData.size() - 1)) {
-                    std::cout << std::endl;
+                    this->logger->infoLn(&ss);
+                    ss.str("");
                 }
             }
-            std::cout << "r====================================================" << std::endl;
+            this->logger->infoLn("read end============================================");
         }
     }
 
     IoStatus TcpConnection::writeAll(unsigned char *buff) {
         size_t writeCountTotal = 0, writeCount, fillCount;
         IoStatus result = IoStatus::Ok;
+        //debug
+        std::stringstream ss;
         while (writeCountTotal < this->outputData.size()) {
             fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, buffSize);
             if (fillCount == 0) {
@@ -68,7 +80,8 @@ namespace services {
             }
             writeCount = write(this->connFd, buff, fillCount);
             writeCountTotal += writeCount;
-            std::cout << "writeCount: " << std::dec << writeCount << std::endl;
+            ss << "writeCount: " << std::dec << writeCount;
+            this->logger->infoLn(&ss);
             if (writeCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                     result = IoStatus::Pending;
@@ -80,15 +93,17 @@ namespace services {
                 return IoStatus::Disconnected;
             }
             //debug
-            std::cout << "w====================================================" << std::endl;
+            this->logger->infoLn("write start==========================================");
+            ss.str("");
             for (std::size_t i = 0; i < writeCount; i++) {
-                std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) buff[i]
-                          << " ";
+                ss << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) buff[i]
+                   << " ";
                 if ((i % 16 == 15) || (i == writeCount - 1)) {
-                    std::cout << std::endl;
+                    this->logger->infoLn(&ss);
+                    ss.str("");
                 }
             }
-            std::cout << "w====================================================" << std::endl;
+            this->logger->infoLn("write end============================================");
         }
         if (writeCountTotal > 0) {
             //删除左侧已经发送了的数据
@@ -112,12 +127,16 @@ namespace services {
         //todo add handlers
         common::PacketHandler *handler = new bhandler::ConnectHandler;
         this->addHandler(handler);
+        handler = new bhandler::PingHandler;
+        this->addHandler(handler);
     }
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
         unsigned char buffer[buffSize];
+        //debug
+        std::stringstream ss;
         if (readAble) {
-            std::cout << "readAll" << std::endl;
+            this->logger->infoLn("readAll");
             auto status = this->readAll(buffer);
             if (status != IoStatus::Pending) {
                 return false;
@@ -125,8 +144,7 @@ namespace services {
         }
         //没有数据需要处理
         if (!this->inputData.empty()) {
-            common::BillingPacket request;
-            common::BillingPacket *responsePtr;
+            common::BillingPacket request, response;
             unsigned int parseResult;
             size_t parseTotalSize = 0;
             common::PacketHandler *handler;
@@ -138,7 +156,7 @@ namespace services {
                 }
                 //格式错误
                 if (parseResult == 2) {
-                    std::cout << "invalid packet" << std::endl;
+                    this->logger->errorLn("invalid packet");
                     return false;
                 }
                 parseTotalSize += request.fullLength();
@@ -146,15 +164,17 @@ namespace services {
                 try {
                     handler = this->packetHandlers.at(request.opType);
                 } catch (std::out_of_range &ex) {
-                    std::cout << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
-                              << std::hex << (int) request.opType << std::endl;
+                    ss.str("");
+                    ss<< "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
+                              << std::hex << (int) request.opType ;
+                    this->logger->errorLn(&ss);
                     break;
                 }
-                responsePtr = handler->getResponse(&request);
-                responsePtr->putData(&this->outputData);
-                delete responsePtr;
+                response.prepareResponse(&request);
+                handler->loadResponse(&request, &response);
+                response.putData(&this->outputData);
                 if (writeAble) {
-                    std::cout << "writeAll.1" << std::endl;
+                    this->logger->infoLn("writeAll.1");
                     auto status = this->writeAll(buffer);
                     if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
                         return false;
@@ -177,7 +197,7 @@ namespace services {
         }
         //
         if (writeAble && !this->outputData.empty()) {
-            std::cout << "writeAll.2" << std::endl;
+            this->logger->infoLn("writeAll.2");
             auto status = this->writeAll(buffer);
             if (status != IoStatus::Ok) {
                 return false;

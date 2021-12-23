@@ -18,8 +18,10 @@ namespace services {
         void initLogger(const char *logFilePath);
 
         void infoLn(const char *msg);
+        void infoLn(const std::stringstream* msg);
 
         void errorLn(const char *msg);
+        void errorLn(const std::stringstream* msg);
     };
 }
 

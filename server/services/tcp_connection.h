@@ -17,6 +17,7 @@ namespace services {
     class TcpConnection {
     private:
         int connFd;
+        Logger* logger;
         std::vector<unsigned char> inputData;
         std::vector<unsigned char> outputData;
         std::map<unsigned char, common::PacketHandler *> packetHandlers;
@@ -36,7 +37,7 @@ namespace services {
         //读写时buffer的大小
         static const size_t buffSize = 1024;
 
-        explicit TcpConnection(int fd);
+        explicit TcpConnection(int fd,Logger* logger);
 
         ~TcpConnection();
 

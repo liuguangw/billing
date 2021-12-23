@@ -7,6 +7,13 @@
 #include "billing_packet.h"
 
 namespace common {
+
+    void BillingPacket::prepareResponse(BillingPacket *request) {
+        this->opType = request->opType;
+        this->msgID = request->msgID;
+        this->opData.clear();
+    }
+
     unsigned int BillingPacket::load(std::vector<unsigned char> *source, size_t offset) {
         this->opData.clear();
         auto sourceSize = source->size() - offset;

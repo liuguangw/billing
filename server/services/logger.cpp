@@ -5,6 +5,7 @@
 #include "logger.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 namespace services {
     const char *colorRed = "\033[31m";
@@ -33,11 +34,19 @@ namespace services {
         this->logOutStream << "[info]" << msg << endl;
     }
 
+    void Logger::infoLn(const std::stringstream* msg) {
+        this->infoLn(msg->str().c_str());
+    }
+
     void Logger::errorLn(const char *msg) {
         using std::cerr;
         using std::endl;
 
         cerr << colorRed << "[error]" << colorReset << msg << endl;
         this->logOutStream << "[error]" << msg << endl;
+    }
+
+    void Logger::errorLn(const std::stringstream *msg) {
+        this->errorLn(msg->str().c_str());
     }
 }

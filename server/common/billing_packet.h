@@ -38,6 +38,8 @@ namespace common {
 
         BillingPacket() = default;
 
+        void prepareResponse(BillingPacket* request);
+
         /**
          * 从数据源中读取数据
          * @param source
@@ -45,8 +47,6 @@ namespace common {
          * @return 0成功 1数据包结构不完整 2数据包格式错误
          */
         unsigned int load(std::vector<unsigned char> *source,size_t offset);
-
-        explicit BillingPacket(BillingPacket *request) : opType(request->opType), msgID(request->msgID) {}
 
         size_t fullLength() const {
             return this->opData.size() + PACKET_MIN_SIZE;

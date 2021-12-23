@@ -14,8 +14,8 @@ namespace common {
         // 可以处理的消息类型
         virtual unsigned char getType() = 0;
 
-        // GetResponse 根据请求获得响应,调用者负责释放内存空间
-        virtual BillingPacket *getResponse(BillingPacket *request) = 0;
+        // GetResponse 根据请求获得响应
+        virtual void loadResponse(const BillingPacket *request, BillingPacket *response) = 0;
 
         virtual ~PacketHandler() = default;
     };

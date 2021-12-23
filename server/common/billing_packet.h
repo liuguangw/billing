@@ -33,6 +33,9 @@ namespace common {
         size_t fullLength() const {
             return this->opData.size() + packetMinSize;
         }
+        //写入数据
+        void putData(std::vector<unsigned char>* outputData);
+        void dumpInfo();
     };
 }
 

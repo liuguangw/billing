@@ -5,51 +5,27 @@
 #include "tcp_connection.h"
 #include "../common/billing_exception.h"
 #include "../common/billing_packet.h"
+#include "fill_buffer.h"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <iostream>
 #include <csignal>
+#include <iomanip>
+#include <cstring>
 
 namespace services {
     using common::IoStatus;
 
     TcpConnection::~TcpConnection() {
-        std::cout << "call TcpConnection::~TcpConnection"  << std::endl;
+        std::cout << "TcpConnection::~TcpConnection" << std::endl;
         close(this->connFd);
-        if (this->threadT != 0) {
-            pthread_cancel(this->threadT);
-            std::cout << "stop child thread fd:" << this->connFd << std::endl;
-        }
-        pthread_mutex_destroy(&this->inputDataMutex);
-        pthread_mutex_destroy(&this->writeAbleMutex);
         std::cout << "TcpConnection destroy fd:" << this->connFd << std::endl;
     }
 
-    size_t
-    TcpConnection::fillBuffer(std::vector<unsigned char> *source, size_t offset, unsigned char *buff, size_t nBytes) {
-        size_t fillCount = 0;
-        if (source->empty()) {
-            return fillCount;
-        }
-        auto it = source->begin();
-        if (offset > 0) {
-            it += offset;
-        }
-        for (size_t i = 0; i < nBytes; i++) {
-            if (it == source->end()) {
-                break;
-            }
-            buff[i] = *it;
-            fillCount++;
-            it++;
-        }
-        return fillCount;
-    }
-
-    IoStatus TcpConnection::readAll(unsigned char *buff, size_t nBytes) {
+    IoStatus TcpConnection::readAll(unsigned char *buff) {
         ssize_t readCount;
         while (true) {
-            readCount = read(this->connFd, buff, nBytes);
+            readCount = read(this->connFd, buff, buffSize);
             std::cout << "readCount: " << std::dec << readCount << std::endl;
             if (readCount < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
@@ -62,9 +38,11 @@ namespace services {
             }
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
+            //debug
             std::cout << "====================================================" << std::endl;
             for (std::size_t i = 0; i < this->inputData.size(); i++) {
-                std::cout << std::hex << (int) this->inputData[i] << " ";
+                std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << (int) this->inputData[i]
+                          << " ";
                 if ((i % 16 == 15) || (i == this->inputData.size() - 1)) {
                     std::cout << std::endl;
                 }
@@ -73,10 +51,10 @@ namespace services {
         }
     }
 
-    common::IoStatus TcpConnection::writeAll(unsigned char *buff, size_t nBytes) {
+    common::IoStatus TcpConnection::writeAll(unsigned char *buff) {
         size_t writeCountTotal = 0, writeCount, fillCount;
         while (writeCountTotal < this->outputData.size()) {
-            fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, nBytes);
+            fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, buffSize);
             if (fillCount == 0) {
                 break;
             }
@@ -106,57 +84,43 @@ namespace services {
         return IoStatus::Ok;
     }
 
-    //启动工作线程
-    void TcpConnection::startWorkingThread() {
-        pthread_attr_t attr;
-        if (pthread_attr_init(&attr) != 0) {
-            throw common::BillingException("init pthread attr failed", errno);
+    bool TcpConnection::processConn(bool readAble, bool writeAble) {
+        unsigned char buffer[buffSize];
+        if (readAble) {
+            std::cout << "readAll" << std::endl;
+            auto status = this->readAll(buffer);
+            if (status != IoStatus::Ok) {
+                return false;
+            }
         }
-        if (pthread_create(&this->threadT, &attr, &processTcpData, this) != 0) {
-            throw common::BillingException("create thread failed", errno);
-        }
-    }
+        //没有数据需要处理
+        if (this->inputData.empty()) {
+            std::cout << "nothing need process" << std::endl;
+            common::BillingPacket packet;
+            packet.opType=0xE5;
+            packet.msgID=0x1234;
+            const char* msg="112233";
+            for(int i=0;i<strlen(msg);i++){
+                packet.opData.push_back((unsigned char)msg[i]);
 
-    void TcpConnection::processData() {
-        std::cout << "[" << this->threadT << "]hello this is child !" << std::endl;
-        common::BillingPacket packet;
-        int loadStatus;
-        while (true) {
-            if (this->needStop) {
-                break;
             }
-            this->lock(true);
-            loadStatus = packet.load(&this->inputData);
-            if (loadStatus != 0) {
-                this->unlock(true);
-            }
-            //std::cout << "packet load status: " << loadStatus << std::endl;
-            if (loadStatus == 0) {
-                //删除左侧
-                auto pos = this->inputData.begin();
-                this->inputData.erase(pos, pos + packet.fullLength());
-                this->unlock(true);
-                //todo response
-            } else if (loadStatus == 1) {
-                usleep(500000);
-                continue;
-            } else {
-                //数据包格式错误的处理
-                std::cout << "packet error fd:" <<this->connFd<< std::endl;
-                close(this->connFd);
-                this->connFd =-1;
-                return;
+            packet.dumpInfo();
+            return true;
+        }
+        //
+        std::cout << "process" << std::endl;
+        this->outputData.push_back('[');
+        this->outputData.insert(this->outputData.end(), this->inputData.begin(), this->inputData.end());
+        this->outputData.push_back(']');
+        this->inputData.clear();
+        //
+        if (writeAble) {
+            std::cout << "writeAll" << std::endl;
+            auto status = this->writeAll(buffer);
+            if (status != IoStatus::Ok) {
+                return false;
             }
         }
-    }
-
-    void *processTcpData(void *arg) {
-        auto tcpConn = static_cast<TcpConnection *>(arg);
-        tcpConn->processData();
-        for (int i = 0; i < 5; i++) {
-            std::cout << std::dec << "...." << i << std::endl;
-            sleep(1);
-        }
-        return nullptr;
+        return true;
     }
 }

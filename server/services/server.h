@@ -16,8 +16,6 @@
 namespace services {
     class Server {
     private:
-        //读写时buffer的大小
-        const size_t buffSize = 4096;
         common::ServerConfig serverConfig;
         Logger logger;
         DatabaseConnection *databaseConnection = nullptr;
@@ -41,7 +39,7 @@ namespace services {
         void processAcceptConnEvent(epoll_event *connEvent);
 
         //处理tcp连接的事件
-        void processConnEvent(epoll_event *connEvent, unsigned char *buff);
+        void processConnEvent(epoll_event *connEvent);
 
     public:
         ~Server();

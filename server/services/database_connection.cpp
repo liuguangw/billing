@@ -27,4 +27,8 @@ namespace services {
     const char *DatabaseConnection::serverVersion() {
         return mysql_get_server_info(this->mysql);
     }
+
+    MYSQL *DatabaseConnection::getMysql() {
+        return this->mysql;
+    }
 }

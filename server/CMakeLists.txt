@@ -5,14 +5,18 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/deps/mysql/include/mysql_version.h
         COMMAND cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_C_FLAGS=-Wno-error -DCMAKE_CXX_FLAGS=-Wno-error -S ${PROJECT_SOURCE_DIR}/../deps/mysql-connector-c-6.1.11-src -B ${CMAKE_BINARY_DIR}/deps/mysql
         COMMAND cmake --build ${CMAKE_BINARY_DIR}/deps/mysql --target mysqlclient -v)
 include_directories(../deps/mysql-connector-c-6.1.11-src/include ${CMAKE_BINARY_DIR}/deps/mysql/include ../deps/yaml-cpp/include)
-# scan
-aux_source_directory(cmd cmdSourceList)
-aux_source_directory(common commonSourceList)
-aux_source_directory(services servicesSourceList)
-aux_source_directory(bhandler bhandlerSourceList)
-aux_source_directory(debug debugSourceList)
-set(serverSourceList "${cmdSourceList};${servicesSourceList};${commonSourceList};${bhandlerSourceList};${debugSourceList}")
 #
-add_library(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/deps/mysql/include/mysql_version.h ${serverSourceList})
+set(serverSourceList ${CMAKE_BINARY_DIR}/deps/mysql/include/mysql_version.h)
+set(sourceDirList bhandler cmd common debug models services)
+foreach(sourceDir IN LISTS sourceDirList)
+    aux_source_directory(${sourceDir} nodeSourceList)
+    list(APPEND serverSourceList ${nodeSourceList})
+endforeach()
+#
+#foreach(cppFilePath IN LISTS serverSourceList)
+#    message(${cppFilePath})
+#endforeach()
+#
+add_library(${PROJECT_NAME} "${serverSourceList}")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/deps/mysql/libmysql/libmysqlclient.a dl pthread yaml-cpp)
 

@@ -5,7 +5,9 @@
 #ifndef BILLING_HANDLER_RESOURCE_H
 #define BILLING_HANDLER_RESOURCE_H
 
+#include <map>
 #include "../common/server_config.h"
+#include "../common/client_info.h"
 #include "database_connection.h"
 #include "logger.h"
 
@@ -15,6 +17,9 @@ namespace services {
         common::ServerConfig mServerConfig;
         Logger mLogger;
         DatabaseConnection *mDatabaseConnection = nullptr;
+        std::map<std::string, common::ClientInfo> mLoginUsers;
+        std::map<std::string, common::ClientInfo> mOnlineUsers;
+        std::map<std::string, unsigned int> mMacCounters;
 
         void initConfig(const char *configFilePath);
 
@@ -29,13 +34,26 @@ namespace services {
             return &this->mLogger;
         }
 
-        DatabaseConnection *Conn() {
+        DatabaseConnection *DbConn() {
             return this->mDatabaseConnection;
+        }
+
+        std::map<std::string, common::ClientInfo> *loginUsers() {
+            return &this->mLoginUsers;
+        }
+
+        std::map<std::string, common::ClientInfo> *onlineUsers() {
+            return &this->mOnlineUsers;
+        }
+
+        std::map<std::string, unsigned int> *macCounters() {
+            return &this->mMacCounters;
         }
 
         void initResource(const char *configFilePath, const char *logFilePath);
 
         void initDatabase();
+
         ~HandlerResource();
     };
 }

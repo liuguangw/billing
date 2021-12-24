@@ -7,6 +7,9 @@
 #include "../common/billing_exception.h"
 #include "../bhandler/connect_handler.h"
 #include "../bhandler/ping_handler.h"
+#include "../bhandler/login_handler.h"
+#include "../bhandler/enter_game_handler.h"
+#include "../bhandler/logout_handler.h"
 #include "../debug/dump_buffer.h"
 #include "../debug/dump_packet.h"
 #include "tcp_connection.h"
@@ -120,6 +123,12 @@ namespace services {
         this->addHandler(handler);
         handler = new bhandler::PingHandler(this->handlerResource);
         this->addHandler(handler);
+        handler=new bhandler::LoginHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler=new bhandler::EnterGameHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler=new bhandler::LogoutHandler(this->handlerResource);
+        this->addHandler(handler);
     }
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
@@ -157,6 +166,7 @@ namespace services {
         PacketParseResult parseResult;
         //已成功解析的数据包总大小
         size_t parseTotalSize = 0;
+        std::map<unsigned char, common::PacketHandler*>::iterator handlerIt;
         common::PacketHandler *handler;
         //debug
         std::stringstream ss;
@@ -176,9 +186,11 @@ namespace services {
             ss.str("");
             debug::dumpPacket(ss, "request", &request);
             logger->infoLn(&ss);
-            try {
-                handler = this->packetHandlers.at(request.opType);
-            } catch (std::out_of_range &ex) {
+            //根据类型,查找handler
+            handlerIt= this->packetHandlers.find(request.opType);
+            if(handlerIt != this->packetHandlers.end()){
+                handler = handlerIt->second;
+            }else{
                 ss.str("");
                 ss << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
                    << std::hex << (int) request.opType;

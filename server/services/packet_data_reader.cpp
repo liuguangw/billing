@@ -10,6 +10,12 @@ namespace common {
     PacketDataReader::PacketDataReader(const std::vector<unsigned char> *opData) : it(opData->begin()), source(opData) {
     }
 
+    unsigned char PacketDataReader::readByte() {
+        unsigned char temp = *this->it;
+        this->it++;
+        return temp;
+    }
+
     unsigned short PacketDataReader::readUShort() {
         unsigned short temp = *this->it;
         temp <<= 8;
@@ -33,11 +39,18 @@ namespace common {
     }
 
     size_t PacketDataReader::readBuffer(unsigned char *buffer, size_t bufferSize) {
-        auto offset = this->it-source->begin();
-        return services::fillBuffer(source,offset,buffer,bufferSize);
+        auto offset = this->it - source->begin();
+        return services::fillBuffer(source, offset, buffer, bufferSize);
     }
 
     void PacketDataReader::skip(int n) {
         this->it += n;
+    }
+
+    void PacketDataReader::buildString(std::string &str, unsigned char *buffer, size_t bufferSize) {
+        str.reserve(bufferSize);
+        for (size_t i = 0; i < bufferSize; i++) {
+            str.push_back((char) buffer[i]);
+        }
     }
 }

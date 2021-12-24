@@ -48,6 +48,8 @@ namespace services {
          * @return
          */
         const char *serverVersion();
+
+        MYSQL* getMysql();
     };
 }
 

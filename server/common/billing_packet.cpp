@@ -3,80 +3,62 @@
 //
 
 #include <iostream>
-#include <iomanip>
 #include "billing_packet.h"
 
 namespace common {
 
-    void BillingPacket::prepareResponse(BillingPacket *request) {
+    void BillingPacket::prepareResponse(const BillingPacket *request) {
         this->opType = request->opType;
         this->msgID = request->msgID;
         this->opData.clear();
     }
 
-    unsigned int BillingPacket::load(std::vector<unsigned char> *source, size_t offset) {
-        this->opData.clear();
+    PacketParseResult BillingPacket::loadFromSource(const std::vector<unsigned char> *source, size_t offset) {
         auto sourceSize = source->size() - offset;
         if (sourceSize < PACKET_MIN_SIZE) {
-            return 1;
+            return PacketParseResult::PacketNotFull;
         }
-        auto it = source->begin() + (int)offset;
+        auto it = source->begin() + (int) offset;
         //头部检测
         if (*it != MASK0) {
-            return 2;
+            return PacketParseResult::PacketInvalid;
         }
+        it++;
         //
-        it++;
         if (*it != MASK1) {
-            return 2;
+            return PacketParseResult::PacketInvalid;
         }
         it++;
+        //
         int dataLength = *it;
         dataLength <<= 8;
         it++;
         dataLength += (int) (*it);
+        it++;
         // OpData数据长度需要减去3: OpType(1字节), MsgID(2字节)
         size_t opDataLength = dataLength - 3;
         //计算包的总长度
         size_t packetFullLength = opDataLength + PACKET_MIN_SIZE;
         //数据包不完整
         if (sourceSize < packetFullLength) {
-            return 1;
+            return PacketParseResult::PacketNotFull;
         }
-        it++;
         this->opType = *it;
         it++;
         this->msgID = *it;
         this->msgID <<= 8;
         it++;
         this->msgID += *it;
+        it++;
+        this->opData.clear();
         if (opDataLength > 0) {
             this->opData.reserve(opDataLength);
-            it++;
             this->opData.insert(this->opData.begin(), it, it + (int) opDataLength);
         }
-        return 0;
+        return PacketParseResult::PacketOk;
     }
 
-    void BillingPacket::dumpInfo(std::stringstream& ss) {
-        ss<<"BillingPacket::dumpInfo"<<std::endl;
-        ss << "====================================================" << std::endl;
-        ss << "opType: 0x" << std::setfill('0') << std::setw(2) << std::right
-                  << std::hex << (int) this->opType << std::endl;
-        ss << "msgID: 0x" << std::setfill('0') << std::setw(4) << std::right
-                  << std::hex << this->msgID << std::endl;
-        ss << "opData:" << std::endl;
-        for (std::size_t i = 0; i < this->opData.size(); i++) {
-            ss << std::setfill('0') << std::setw(2) << std::right
-                      << std::hex << (int) this->opData[i] << " ";
-            if ((i % 16 == 15) || (i == this->opData.size() - 1)) {
-                ss << std::endl;
-            }
-        }
-        ss << "====================================================";
-    }
-
-    void BillingPacket::putData(std::vector<unsigned char> *outputData) {
+    void BillingPacket::appendToOutput(std::vector<unsigned char> *outputData) {
         //保证空间大小足够
         outputData->reserve(outputData->size() + this->fullLength());
         outputData->push_back(MASK0);
@@ -87,7 +69,9 @@ namespace common {
         outputData->push_back(this->opType);
         outputData->push_back((unsigned char) (this->msgID >> 8));
         outputData->push_back((unsigned char) (this->msgID & 0xff));
-        outputData->insert(outputData->end(), this->opData.begin(), this->opData.end());
+        if (!this->opData.empty()) {
+            outputData->insert(outputData->end(), this->opData.begin(), this->opData.end());
+        }
         outputData->push_back(MASK1);
         outputData->push_back(MASK0);
     }
@@ -113,9 +97,13 @@ namespace common {
         this->opData.push_back((unsigned char) tmp);
     }
 
-    void BillingPacket::appendOpData(std::string &data) {
-        for (char &it: data) {
+    void BillingPacket::appendOpData(const std::string &data) {
+        for (char it: data) {
             this->opData.push_back((unsigned char) it);
         }
+    }
+
+    void BillingPacket::appendOpData(const unsigned char *data, size_t dataSize) {
+        this->opData.insert(this->opData.end(), data, data + dataSize);
     }
 }

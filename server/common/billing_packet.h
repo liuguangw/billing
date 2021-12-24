@@ -67,6 +67,8 @@ namespace common {
 
         void appendOpData(const std::string &data);
 
+        void appendOpData(const unsigned char* data,size_t dataSize);
+
         //写入数据
         void appendToOutput(std::vector<unsigned char> *outputData);
     };

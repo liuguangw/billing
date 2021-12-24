@@ -41,8 +41,8 @@ namespace common {
     size_t PacketDataReader::readBuffer(unsigned char *buffer, size_t bufferSize) {
         auto offset = this->it - source->begin();
         size_t fillCount = services::fillBuffer(source, offset, buffer, bufferSize);
-		this->it += fillCount;
-		return fillCount;
+        this->it += (int) fillCount;
+        return fillCount;
     }
 
     void PacketDataReader::skip(int n) {

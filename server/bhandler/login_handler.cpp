@@ -40,7 +40,7 @@ namespace bhandler {
         unsigned char macMd5Buffer[macMd5BufferSize];
         packetReader.readBuffer(macMd5Buffer, macMd5BufferSize);
         string macMd5;
-        PacketDataReader::buildString(macMd5, loginIPBuffer, macMd5BufferSize);
+        PacketDataReader::buildString(macMd5, macMd5Buffer, macMd5BufferSize);
         //初始化
         unsigned char loginResultCode = loginCodeSuccess;
         models::LoginResult loginResult;

@@ -92,15 +92,15 @@ namespace services {
 
     int Server::run() {
         auto logger=this->handlerResource.logger();
-        /*try {
-            this->initDatabase();
+        try {
+            this->handlerResource.initDatabase();
         } catch (common::BillingException &ex) {
-            this->logger.errorLn(ex.what());
+            logger->errorLn(ex.what());
             return EXIT_FAILURE;
         }
-        string serverVersionInfo = "mysql version: ";
-        serverVersionInfo.append(this->databaseConnection->serverVersion());
-        this->logger.infoLn(serverVersionInfo.c_str());*/
+        std::stringstream  ss;
+        ss<<"mysql version: "<< this->handlerResource.DbConn()->serverVersion();
+        logger->infoLn(&ss);
         //
         try {
             this->initEpoll();
@@ -112,9 +112,9 @@ namespace services {
         }
         {
             auto serverConfig=this->handlerResource.config();
-            std::stringstream listenAddress;
-            listenAddress << serverConfig->IP.c_str() << ":" <<serverConfig->Port;
-            this->handlerResource.logger()->infoLn(listenAddress.str().c_str());
+            ss.str("");
+            ss<< serverConfig->IP.c_str() << ":" <<serverConfig->Port;
+            logger->infoLn(&ss);
         }
         try {
             this->runLoop();
@@ -157,7 +157,7 @@ namespace services {
         if (connFd < 0) {
             std::stringstream msg;
             msg << "accept connection failed: " << strerror(errno);
-            logger->errorLn(msg.str().c_str());
+            logger->errorLn(&msg);
             return;
         }
         //为tcp连接注册事件
@@ -166,7 +166,7 @@ namespace services {
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, connFd, connEvent) == -1) {
             std::stringstream msg;
             msg << "epoll register connection socket failed: " << strerror(errno);
-            logger->errorLn(msg.str().c_str());
+            logger->errorLn(&msg);
             return;
         }
         //分配空间,放入map中

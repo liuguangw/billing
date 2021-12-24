@@ -29,6 +29,15 @@ namespace common {
     static const unsigned char PACKET_TYPE_QUERYPOINT = 0xE2;
     static const unsigned char PACKET_TYPE_REGISTER = 0xF1;
 
+    /**
+     * 解析packet的结果
+     */
+    enum PacketParseResult {
+        PacketOk,//解析成功
+        PacketNotFull,//数据包还不完整
+        PacketInvalid//数据包格式错误
+    };
+
     //
     class BillingPacket {
     public:
@@ -38,15 +47,15 @@ namespace common {
 
         BillingPacket() = default;
 
-        void prepareResponse(BillingPacket* request);
+        void prepareResponse(const BillingPacket *request);
 
         /**
-         * 从数据源中读取数据
+         * 从数据源中解析数据包
          * @param source
          * @param offset 开始的位置
-         * @return 0成功 1数据包结构不完整 2数据包格式错误
+         * @return 解析结果
          */
-        unsigned int load(std::vector<unsigned char> *source,size_t offset);
+        PacketParseResult loadFromSource(const std::vector<unsigned char> *source, size_t offset);
 
         size_t fullLength() const {
             return this->opData.size() + PACKET_MIN_SIZE;
@@ -56,12 +65,10 @@ namespace common {
 
         void appendOpData(unsigned short data);
 
-        void appendOpData(std::string &data);
+        void appendOpData(const std::string &data);
 
         //写入数据
-        void putData(std::vector<unsigned char> *outputData);
-
-        void dumpInfo(std::stringstream& ss);
+        void appendToOutput(std::vector<unsigned char> *outputData);
     };
 }
 

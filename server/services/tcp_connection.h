@@ -5,14 +5,13 @@
 #ifndef BILLING_TCP_CONNECTION_H
 #define BILLING_TCP_CONNECTION_H
 
+
+#include <map>
+#include <vector>
 #include "../common/io_status.h"
 #include "../common/packet_handler.h"
 #include "logger.h"
 #include "handler_resource.h"
-#include <sys/epoll.h>
-#include <map>
-#include <iostream>
-#include <pthread.h>
 
 namespace services {
     class TcpConnection {
@@ -43,12 +42,20 @@ namespace services {
         ~TcpConnection();
 
         /**
-         * 处理数据
+         * 处理连接事件
          * @param readAble 是否可读
          * @param writeAble 是否可写
          * @return 操作成功时返回
          */
         bool processConn(bool readAble, bool writeAble);
+
+        /**
+         * 处理读取到的数据
+         * @param writeAble 是否可写
+         * @param buffer 用于写入的临时buffer
+         * @return 操作成功时返回
+         */
+        bool processInputData(bool writeAble,unsigned char* buffer);
     };
 }
 

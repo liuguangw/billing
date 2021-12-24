@@ -2,20 +2,18 @@
 // Created by liuguang on 2021/12/19.
 //
 
-#include "server.h"
-#include "../common/billing_exception.h"
 #include <string>
-#include <sys/epoll.h>
-#include <unistd.h>
 #include <cstring>
+#include <csignal>
+#include <sstream>
+#include <unistd.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/signalfd.h>
-#include <cstdlib>
-#include <iostream>
-#include <sstream>
-#include <csignal>
+#include "server.h"
+#include "../common/billing_exception.h"
 
 
 namespace services {

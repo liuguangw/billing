@@ -1,18 +1,17 @@
 //
 // Created by liuguang on 2021/12/19.
 //
-#include "command.h"
-#include "../services/database_connection.h"
-#include "../services/server.h"
-#include <libgen.h>
-#include <cstring>
 #include <string>
+#include <cstring>
+#include <libgen.h>
+#include "command.h"
+#include "../services/server.h"
 
 namespace cmd {
-    using std::string;
-    using std::stringbuf;
 
     int runCommand(int argc, char *argv[]) {
+        using std::string;
+
         char *exePath = canonicalize_file_name(argv[0]);
         string exeDir = dirname(exePath);
         free(exePath);

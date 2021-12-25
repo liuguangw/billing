@@ -2,7 +2,7 @@ project(server)
 
 set(mysqlCFlagOpt "")
 set(mysqlCxxFlagOpt "")
-set(mysqlLibOutPath ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmysqlclient.a)
+set(mysqlLibOutPath ${CMAKE_BINARY_DIR}/deps/mysql/libmysql/libmysqlclient.a)
 if (BILLING_BUILD_M32)
     set(mysqlCFlagOpt "-DCMAKE_C_FLAGS=-m32")
     set(mysqlCxxFlagOpt "-DCMAKE_CXX_FLAGS-m32")

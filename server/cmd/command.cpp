@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <libgen.h>
+#include <unistd.h>
 #include "command.h"
 #include "../services/server.h"
 
@@ -34,6 +35,16 @@ namespace cmd {
         }
         logFilePath += logPath;
         services::Server server;
+        if (argc >= 3) {
+            //daemon - run in the background
+            if ((strcmp(argv[1], "up") == 0) && (strcmp(argv[2], "-d") == 0)) {
+                if (daemon(1, 1) != 0) {
+                    std::cerr << "run daemon failed: " << strerror(errno) << std::endl;
+                    return EXIT_FAILURE;
+                }
+            }
+        }
+
         server.initResource(configFilePath.c_str(), logFilePath.c_str());
         return server.run();
     }

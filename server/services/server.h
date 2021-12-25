@@ -32,6 +32,9 @@ namespace services {
 
         void runLoop();
 
+        //判断是否允许此ip连接billing
+        bool allowIpAddress(const char* address);
+
         //接受tcp连接
         void processAcceptConnEvent(epoll_event *connEvent);
 

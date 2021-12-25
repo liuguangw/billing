@@ -72,7 +72,7 @@ namespace services {
         setsockopt(this->serverSockFd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
         sockaddr_in serverAddress{};
         serverAddress.sin_family = AF_INET;
-        auto serverConfig=this->handlerResource.config();
+        auto serverConfig = this->handlerResource.config();
         serverAddress.sin_addr.s_addr = inet_addr(serverConfig->IP.c_str());
         serverAddress.sin_port = htons(serverConfig->Port);
         if (bind(this->serverSockFd, (sockaddr *) &serverAddress, sizeof(serverAddress)) < 0) {
@@ -91,15 +91,15 @@ namespace services {
     }
 
     int Server::run() {
-        auto logger=this->handlerResource.logger();
+        auto logger = this->handlerResource.logger();
         try {
             this->handlerResource.initDatabase();
         } catch (common::BillingException &ex) {
             logger->errorLn(ex.what());
             return EXIT_FAILURE;
         }
-        std::stringstream  ss;
-        ss<<"mysql version: "<< this->handlerResource.DbConn()->serverVersion();
+        std::stringstream ss;
+        ss << "mysql version: " << this->handlerResource.DbConn()->serverVersion();
         logger->infoLn(&ss);
         //
         try {
@@ -111,9 +111,9 @@ namespace services {
             return EXIT_FAILURE;
         }
         {
-            auto serverConfig=this->handlerResource.config();
+            auto serverConfig = this->handlerResource.config();
             ss.str("");
-            ss<< serverConfig->IP.c_str() << ":" <<serverConfig->Port;
+            ss << "billing server run at " << serverConfig->IP.c_str() << ":" << serverConfig->Port;
             logger->infoLn(&ss);
         }
         try {
@@ -150,36 +150,63 @@ namespace services {
         }
     }
 
+    bool Server::allowIpAddress(const char *address) {
+        auto allowIps = &this->handlerResource.config()->AllowIps;
+        // 当配置的白名单为空时,表示允许所有ip连接
+        if (allowIps->empty()) {
+            return true;
+        }
+        // 当不为空时,只允许指定的ip连接
+        bool ipAllowed = false;
+        for (auto &allowIp: *allowIps) {
+            if (allowIp == address) {
+                ipAllowed = true;
+            }
+        }
+        return ipAllowed;
+    }
+
     void Server::processAcceptConnEvent(epoll_event *connEvent) {
-        auto logger=this->handlerResource.logger();
+        auto logger = this->handlerResource.logger();
+        sockaddr_in remoteAddress{};
+        socklen_t remoteAddressLength = sizeof(remoteAddress);
         int connFd = accept4(this->serverSockFd,
-                             (struct sockaddr *) nullptr, nullptr, SOCK_NONBLOCK);
+                             (struct sockaddr *) &remoteAddress, &remoteAddressLength, SOCK_NONBLOCK);
         if (connFd < 0) {
-            std::stringstream msg;
-            msg << "accept connection failed: " << strerror(errno);
-            logger->errorLn(&msg);
+            std::stringstream ss;
+            ss << "accept connection failed: " << strerror(errno);
+            logger->errorLn(&ss);
+            return;
+        }
+        //获取连接者的ip和端口
+        char *ipAddressStr = inet_ntoa(remoteAddress.sin_addr);
+        unsigned short port = ntohs(remoteAddress.sin_port);
+        if (!this->allowIpAddress(ipAddressStr)) {
+            close(connFd);
+            std::stringstream ss;
+            ss << "client " << ipAddressStr << " is not allowed to connect";
+            logger->errorLn(&ss);
             return;
         }
         //为tcp连接注册事件
         connEvent->events = EPOLLIN | EPOLLOUT | EPOLLET;
         connEvent->data.fd = connFd;
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, connFd, connEvent) == -1) {
-            std::stringstream msg;
-            msg << "epoll register connection socket failed: " << strerror(errno);
-            logger->errorLn(&msg);
+            std::stringstream ss;
+            ss << "epoll register connection socket failed: " << strerror(errno);
+            logger->errorLn(&ss);
             return;
         }
         //分配空间,放入map中
-        auto tcpConn = new TcpConnection(connFd, &this->handlerResource);
+        auto tcpConn = new TcpConnection(connFd, ipAddressStr, port, &this->handlerResource);
         this->tcpConnections[connFd] = tcpConn;
-        logger->infoLn("accept ok");
     }
 
     void Server::processConnEvent(epoll_event *connEvent) {
         auto tcpConn = this->tcpConnections[connEvent->data.fd];
         if (!tcpConn->processConn(
                 (connEvent->events & EPOLLIN) != 0,
-                (connEvent->events & EPOLLOUT) != 0) ){
+                (connEvent->events & EPOLLOUT) != 0)) {
             //释放空间
             this->tcpConnections.erase(connEvent->data.fd);
             delete tcpConn;
@@ -187,6 +214,6 @@ namespace services {
     }
 
     void Server::initResource(const char *configFilePath, const char *logFilePath) {
-        this->handlerResource.initResource(configFilePath,logFilePath);
+        this->handlerResource.initResource(configFilePath, logFilePath);
     }
 }

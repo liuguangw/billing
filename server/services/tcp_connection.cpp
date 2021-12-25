@@ -18,11 +18,16 @@
 namespace services {
     using common::IoStatus;
 
-    TcpConnection::TcpConnection(int fd, HandlerResource *hResource) : connFd(fd), handlerResource(hResource) {
+    TcpConnection::TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource *hResource)
+            : connFd(fd), ipAddress(ipAddress), port(port), handlerResource(hResource) {
         this->initPacketHandlers();
+        auto logger = this->handlerResource->logger();
         std::stringstream ss;
         ss << "TcpConnection::TcpConnection fd:" << fd;
-        this->handlerResource->logger()->infoLn(&ss);
+        logger->infoLn(&ss);
+        ss.str("");
+        ss << "client " << ipAddress << ":" << port << " connected";
+        logger->infoLn(&ss);
     }
 
     TcpConnection::~TcpConnection() {
@@ -34,14 +39,12 @@ namespace services {
         close(this->connFd);
         std::stringstream ss;
         ss << "TcpConnection destroy fd:" << this->connFd;
+        ss << "(" << this->ipAddress << ":" << this->port << ")";
         logger->infoLn(&ss);
     }
 
     IoStatus TcpConnection::readAll(unsigned char *buff) {
         ssize_t readCount;
-        //debug
-        std::stringstream ss;
-        auto logger = this->handlerResource->logger();
         while (true) {
             readCount = read(this->connFd, buff, buffSize);
             if (readCount < 0) {
@@ -55,10 +58,6 @@ namespace services {
             }
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
-            //debug
-            ss.str("");
-            debug::dumpBuffer(ss, "input data", buff, readCount);
-            logger->infoLn(&ss);
             //缓冲区没有数据可以读取了
             if ((size_t) readCount < buffSize) {
                 return IoStatus::Pending;
@@ -69,9 +68,6 @@ namespace services {
     IoStatus TcpConnection::writeAll(unsigned char *buff) {
         size_t writeCountTotal = 0, writeCount, fillCount;
         IoStatus result = IoStatus::Ok;
-        //debug
-        std::stringstream ss;
-        auto logger = this->handlerResource->logger();
         while (writeCountTotal < this->outputData.size()) {
             fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, buffSize);
             if (fillCount == 0) {
@@ -89,10 +85,6 @@ namespace services {
             } else if (writeCount == 0) {
                 return IoStatus::Disconnected;
             }
-            //debug
-            ss.str("");
-            debug::dumpBuffer(ss, "output data", buff, writeCount);
-            logger->infoLn(&ss);
             //缓冲区满了
             if ((size_t) writeCount < fillCount) {
                 result = IoStatus::Pending;
@@ -123,29 +115,26 @@ namespace services {
         this->addHandler(handler);
         handler = new bhandler::PingHandler(this->handlerResource);
         this->addHandler(handler);
-        handler=new bhandler::LoginHandler(this->handlerResource);
+        handler = new bhandler::LoginHandler(this->handlerResource);
         this->addHandler(handler);
-        handler=new bhandler::EnterGameHandler(this->handlerResource);
+        handler = new bhandler::EnterGameHandler(this->handlerResource);
         this->addHandler(handler);
-        handler=new bhandler::LogoutHandler(this->handlerResource);
+        handler = new bhandler::LogoutHandler(this->handlerResource);
         this->addHandler(handler);
     }
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
         unsigned char buffer[buffSize];
-        //debug
-        std::stringstream ss;
-        auto logger = this->handlerResource->logger();
         //写入上一轮没有成功写入的数据
         if (writeAble && !this->outputData.empty()) {
-            logger->infoLn("writeAll");
+            //logger->infoLn("writeAll");
             auto status = this->writeAll(buffer);
             if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
                 return false;
             }
         }
         if (readAble) {
-            logger->infoLn("readAll");
+            //logger->infoLn("readAll");
             auto status = this->readAll(buffer);
             if (status != IoStatus::Pending) {
                 return false;
@@ -166,10 +155,8 @@ namespace services {
         PacketParseResult parseResult;
         //已成功解析的数据包总大小
         size_t parseTotalSize = 0;
-        std::map<unsigned char, common::PacketHandler*>::iterator handlerIt;
+        std::map<unsigned char, common::PacketHandler *>::iterator handlerIt;
         common::PacketHandler *handler;
-        //debug
-        std::stringstream ss;
         auto logger = this->handlerResource->logger();
         while (true) {
             parseResult = request.loadFromSource(&this->inputData, parseTotalSize);
@@ -183,28 +170,26 @@ namespace services {
                 return false;
             }
             parseTotalSize += request.fullLength();
-            ss.str("");
-            debug::dumpPacket(ss, "request", &request);
-            logger->infoLn(&ss);
             //根据类型,查找handler
-            handlerIt= this->packetHandlers.find(request.opType);
-            if(handlerIt != this->packetHandlers.end()){
+            handlerIt = this->packetHandlers.find(request.opType);
+            if (handlerIt != this->packetHandlers.end()) {
                 handler = handlerIt->second;
-            }else{
-                ss.str("");
+            } else {
+                //记录无法处理的packet
+                std::stringstream ss;
                 ss << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
                    << std::hex << (int) request.opType;
                 logger->errorLn(&ss);
+                ss.str("");
+                debug::dumpPacket(ss, "request", &request);
+                logger->infoLn(&ss);
                 break;
             }
             response.prepareResponse(&request);
             handler->loadResponse(&request, &response);
-            ss.str("");
-            debug::dumpPacket(ss, "response", &response);
-            logger->infoLn(&ss);
             response.appendToOutput(&this->outputData);
             if (writeAble) {
-                logger->infoLn("writePacket");
+                //logger->infoLn("writePacket");
                 auto status = this->writeAll(buffer);
                 if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
                     return false;

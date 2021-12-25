@@ -17,6 +17,8 @@ namespace services {
     class TcpConnection {
     private:
         int connFd;
+        std::string ipAddress;
+        unsigned short port;
         HandlerResource *handlerResource;
         std::vector<unsigned char> inputData;
         std::vector<unsigned char> outputData;
@@ -37,7 +39,7 @@ namespace services {
         //读写时buffer的大小
         static const size_t buffSize = 1024;
 
-        explicit TcpConnection(int fd,HandlerResource *hResource);
+        explicit TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource *hResource);
 
         ~TcpConnection();
 
@@ -55,7 +57,7 @@ namespace services {
          * @param buffer 用于写入的临时buffer
          * @return 操作成功时返回
          */
-        bool processInputData(bool writeAble,unsigned char* buffer);
+        bool processInputData(bool writeAble, unsigned char *buffer);
     };
 }
 

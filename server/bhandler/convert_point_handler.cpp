@@ -103,7 +103,7 @@ namespace bhandler {
            << "  point total [" << userPoint << "], need point [" << needPoint << "]"
            << ", (" << userPoint << " - " << realPoint << " = " << leftPoint << ")"
            << ": " << convertResultText;
-        logger->errorLn(&ss);
+        logger->infoLn(&ss);
         // 数据包组合
         response->opData.reserve(1 + usernameLength + orderIdLength + 1 + 4 + 2 + 4 + 2);
         response->opData.push_back(usernameLength);

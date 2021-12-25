@@ -58,6 +58,10 @@ namespace bhandler {
                 .CharName=charName};
         services::markOnline(this->handlerResource->loginUsers(), this->handlerResource->onlineUsers(),
                              this->handlerResource->macCounters(), username.c_str(), clientInfo);
+        //日志记录
+        ss.str("");
+        ss << "user [" << username << "] " << charName << " query point (" << userPoint << ") at " << loginIP;
+        logger->infoLn(&ss);
         unsigned int pointValue = (userPoint + 1) * 1000;
         response->opData.reserve(usernameLength + 5);
         response->opData.push_back(usernameLength);

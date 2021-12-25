@@ -106,7 +106,6 @@ namespace services {
     }
 
     void TcpConnection::initPacketHandlers() {
-        //todo add handlers
         common::PacketHandler *handler = new bhandler::ConnectHandler;
         this->addHandler(handler);
         handler = new bhandler::PingHandler(this->handlerResource);
@@ -120,6 +119,14 @@ namespace services {
         handler = new bhandler::KeepHandler(this->handlerResource);
         this->addHandler(handler);
         handler = new bhandler::KickHandler;
+        this->addHandler(handler);
+        handler = new bhandler::CostLogHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler = new bhandler::ConvertPointHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler = new bhandler::QueryPointHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler = new bhandler::RegisterHandler(this->handlerResource);
         this->addHandler(handler);
     }
 

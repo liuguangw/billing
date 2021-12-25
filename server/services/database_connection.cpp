@@ -7,12 +7,12 @@
 
 namespace services {
     void DatabaseConnection::connect() {
-        mysql_options(this->mysql,MYSQL_OPT_RECONNECT,&this->reConnect);
-        if(mysql_real_connect(this->mysql, this->serverConfig->DbHost.c_str(), this->serverConfig->DbUser.c_str(),
-                              this->serverConfig->DbPassword.c_str(), this->serverConfig->DbName.c_str(),
-                              this->serverConfig->DbPort,
-                              nullptr, 0) == nullptr){
-            throw common::BillingException("connect database failed",this->lastError());
+        mysql_options(this->mysql, MYSQL_OPT_RECONNECT, &this->reConnect);
+        if (mysql_real_connect(this->mysql, this->serverConfig->DbHost.c_str(), this->serverConfig->DbUser.c_str(),
+                               this->serverConfig->DbPassword.c_str(), this->serverConfig->DbName.c_str(),
+                               this->serverConfig->DbPort,
+                               nullptr, 0) == nullptr) {
+            throw common::BillingException("connect database failed", this->lastError());
         }
     }
 

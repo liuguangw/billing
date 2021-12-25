@@ -12,5 +12,9 @@
 #include "logout_handler.h"
 #include "keep_handler.h"
 #include "kick_handler.h"
+#include "cost_log_handler.h"
+#include "convert_point_handler.h"
+#include "query_point_handler.h"
+#include "register_handler.h"
 
 #endif //BILLING_HANDLERS_H

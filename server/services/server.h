@@ -33,7 +33,7 @@ namespace services {
         void runLoop();
 
         //判断是否允许此ip连接billing
-        bool allowIpAddress(const char* address);
+        bool allowIpAddress(const char *address);
 
         //接受tcp连接
         void processAcceptConnEvent(epoll_event *connEvent);
@@ -44,7 +44,7 @@ namespace services {
     public:
         ~Server();
 
-        void initResource(const char *configFilePath,const char *logFilePath);
+        void initResource(const char *configFilePath, const char *logFilePath);
 
         int run();
     };

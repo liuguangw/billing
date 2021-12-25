@@ -34,7 +34,7 @@ namespace services {
         this->logOutStream << "[info]" << msg << endl;
     }
 
-    void Logger::infoLn(const std::stringstream* msg) {
+    void Logger::infoLn(const std::stringstream *msg) {
         this->infoLn(msg->str().c_str());
     }
 

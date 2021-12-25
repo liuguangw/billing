@@ -22,45 +22,45 @@ namespace services {
         serverConfig->MaxClientCount = 500;
         serverConfig->PcMaxClientCount = 3;
         //parse
-        auto config=YAML::LoadFile(configFilePath);
-        if(config["ip"]){
+        auto config = YAML::LoadFile(configFilePath);
+        if (config["ip"]) {
             serverConfig->IP = config["ip"].as<string>();
         }
-        if(config["port"]){
+        if (config["port"]) {
             serverConfig->Port = config["port"].as<int>();
         }
-        if(config["db_host"]){
+        if (config["db_host"]) {
             serverConfig->DbHost = config["db_host"].as<string>();
         }
-        if(config["db_port"]){
+        if (config["db_port"]) {
             serverConfig->DbPort = config["db_port"].as<int>();
         }
-        if(config["db_user"]){
+        if (config["db_user"]) {
             serverConfig->DbUser = config["db_user"].as<string>();
         }
-        if(config["db_password"]){
+        if (config["db_password"]) {
             serverConfig->DbPassword = config["db_password"].as<string>();
         }
-        if(config["db_name"]){
+        if (config["db_name"]) {
             serverConfig->DbName = config["db_name"].as<string>();
         }
-        if(config["allow_old_password"]){
+        if (config["allow_old_password"]) {
             serverConfig->AllowOldPassword = config["allow_old_password"].as<bool>();
         }
-        if(config["auto_reg"]){
+        if (config["auto_reg"]) {
             serverConfig->AutoReg = config["auto_reg"].as<bool>();
         }
         auto allowIps = config["allow_ips"];
-        if(allowIps){
+        if (allowIps) {
             serverConfig->AllowIps.clear();
-            for (auto it=allowIps.begin();it!=allowIps.end();++it) {
+            for (auto it = allowIps.begin(); it != allowIps.end(); ++it) {
                 serverConfig->AllowIps.push_back(it->as<string>());
             }
         }
-        if(config["max_client_count"]){
+        if (config["max_client_count"]) {
             serverConfig->MaxClientCount = config["max_client_count"].as<int>();
         }
-        if(config["pc_max_client_count"]){
+        if (config["pc_max_client_count"]) {
             serverConfig->PcMaxClientCount = config["pc_max_client_count"].as<int>();
         }
     }

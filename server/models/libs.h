@@ -8,6 +8,7 @@
 #include <map>
 #include "account.h"
 #include "login_result.h"
+#include "register_result.h"
 #include "../services/database_connection.h"
 #include "../common/client_info.h"
 
@@ -27,18 +28,27 @@ namespace models {
 
     /**
      * 注册帐号
+     * @param registerResult
      * @param dbConn
      * @param account 用户信息
      * @return
+     */
+    void registerAccount(RegisterResult *registerResult, DatabaseConnection *dbConn, const Account *account);
+
+    /**
+     * 插入用户记录
+     * @param dbConn
+     * @param account
      * @throws common::BillingException
      */
-    void registerAccount(DatabaseConnection *dbConn, const Account *account);
+    void doInsertAccount(DatabaseConnection *dbConn, const Account *account);
 
     /**
      * 点数兑换
      * @param dbConn
      * @param username
      * @param point
+     * @throws common::BillingException
      */
     void convertUserPoint(DatabaseConnection *dbConn, const char *username, unsigned int point);
 

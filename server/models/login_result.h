@@ -4,11 +4,12 @@
 
 #ifndef BILLING_LOGIN_RESULT_H
 #define BILLING_LOGIN_RESULT_H
+
 #include <string>
 
-namespace models{
+namespace models {
     //登录错误定义
-    enum LoginError{
+    enum LoginError {
         //没有错误
         LoginNoError,
         //登录的用户不存在
@@ -23,7 +24,7 @@ namespace models{
         LoginOtherError
     };
 
-    struct LoginResult{
+    struct LoginResult {
         LoginError loginError;
         std::string message;
     };

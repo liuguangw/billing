@@ -8,7 +8,6 @@
 #include "../models/libs.h"
 
 namespace bhandler {
-    using common::BillingPacket;
     using std::string;
     using common::PacketDataReader;
 

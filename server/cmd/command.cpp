@@ -34,7 +34,7 @@ namespace cmd {
         }
         logFilePath += logPath;
         services::Server server;
-        server.initResource(configFilePath.c_str(),logFilePath.c_str());
+        server.initResource(configFilePath.c_str(), logFilePath.c_str());
         return server.run();
     }
 }

@@ -9,7 +9,7 @@
 #include "../common/billing_packet.h"
 
 namespace debug {
-    void dumpPacket(std::stringstream &ss,const char* title, const common::BillingPacket *packet);
+    void dumpPacket(std::stringstream &ss, const char *title, const common::BillingPacket *packet);
 }
 
 

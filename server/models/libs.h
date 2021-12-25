@@ -23,7 +23,7 @@ namespace models {
      * @return
      * @throws common::BillingException
      */
-    void loadAccountByUsername(DatabaseConnection* dbConn,const char *username, Account *account, bool *exists);
+    void loadAccountByUsername(DatabaseConnection *dbConn, const char *username, Account *account, bool *exists);
 
     /**
      * 注册帐号
@@ -32,7 +32,7 @@ namespace models {
      * @return
      * @throws common::BillingException
      */
-    void registerAccount(DatabaseConnection* dbConn,const Account *account);
+    void registerAccount(DatabaseConnection *dbConn, const Account *account);
 
     /**
      * 点数兑换
@@ -40,7 +40,7 @@ namespace models {
      * @param username
      * @param point
      */
-    void convertUserPoint(DatabaseConnection* dbConn,const char *username,unsigned int point);
+    void convertUserPoint(DatabaseConnection *dbConn, const char *username, unsigned int point);
 
     /**
      * 登录验证

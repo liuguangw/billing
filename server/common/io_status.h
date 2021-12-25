@@ -6,7 +6,7 @@
 #define BILLING_IO_STATUS_H
 
 namespace common {
-    enum IoStatus{
+    enum IoStatus {
         //成功
         Ok,
         //失败
@@ -15,6 +15,6 @@ namespace common {
         Pending,
         //连接断开了
         Disconnected
- };
+    };
 }
 #endif //BILLING_IO_STATUS_H

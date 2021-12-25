@@ -8,7 +8,6 @@
 #include "../services/mark_online.h"
 
 namespace bhandler {
-    using common::BillingPacket;
     using std::string;
     using common::PacketDataReader;
 

@@ -5,11 +5,7 @@
 #include <unistd.h>
 #include <iomanip>
 #include "../common/billing_exception.h"
-#include "../bhandler/connect_handler.h"
-#include "../bhandler/ping_handler.h"
-#include "../bhandler/login_handler.h"
-#include "../bhandler/enter_game_handler.h"
-#include "../bhandler/logout_handler.h"
+#include "../bhandler/handlers.h"
 #include "../debug/dump_buffer.h"
 #include "../debug/dump_packet.h"
 #include "tcp_connection.h"
@@ -120,6 +116,10 @@ namespace services {
         handler = new bhandler::EnterGameHandler(this->handlerResource);
         this->addHandler(handler);
         handler = new bhandler::LogoutHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler = new bhandler::KeepHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler = new bhandler::KickHandler;
         this->addHandler(handler);
     }
 

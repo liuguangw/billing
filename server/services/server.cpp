@@ -161,6 +161,7 @@ namespace services {
         for (auto &allowIp: *allowIps) {
             if (allowIp == address) {
                 ipAllowed = true;
+                break;
             }
         }
         return ipAllowed;

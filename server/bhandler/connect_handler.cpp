@@ -3,10 +3,10 @@
 //
 
 #include "connect_handler.h"
+
 namespace bhandler {
-    using common::BillingPacket;
 
     void ConnectHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        response->appendOpData((unsigned short )0x2000);
+        response->appendOpData((unsigned short) 0x2000);
     }
 }

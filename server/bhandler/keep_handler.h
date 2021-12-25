@@ -1,9 +1,9 @@
 //
-// Created by liuguang on 2021/12/24.
+// Created by liuguang on 2021/12/25.
 //
 
-#ifndef BILLING_LOGOUT_HANDLER_H
-#define BILLING_LOGOUT_HANDLER_H
+#ifndef BILLING_KEEP_HANDLER_H
+#define BILLING_KEEP_HANDLER_H
 
 #include "../common/billing_packet.h"
 #include "../common/packet_handler.h"
@@ -13,15 +13,15 @@ namespace bhandler {
     using common::BillingPacket;
     using services::HandlerResource;
 
-    class LogoutHandler : public common::PacketHandler {
+    class KeepHandler : public common::PacketHandler {
     private:
         HandlerResource *handlerResource;
     public:
-        explicit LogoutHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit KeepHandler(HandlerResource *hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {
-            return common::PACKET_TYPE_LOGOUT;
+            return common::PACKET_TYPE_KEEP;
         }
 
         void loadResponse(const BillingPacket *request, BillingPacket *response) override;
@@ -29,4 +29,4 @@ namespace bhandler {
 }
 
 
-#endif //BILLING_LOGOUT_HANDLER_H
+#endif //BILLING_KEEP_HANDLER_H

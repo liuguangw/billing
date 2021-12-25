@@ -10,7 +10,7 @@ namespace common {
         this->message.append(title).append(": ").append(message);
     }
 
-    BillingException::BillingException(const char *title, int errorCode)  {
+    BillingException::BillingException(const char *title, int errorCode) {
         this->message.append(title).append(": ").append(strerror(errorCode));
     }
 }

@@ -1,0 +1,15 @@
+//
+// Created by liuguang on 2021/12/26.
+//
+
+#ifndef BILLING_BUILD_INFO_H
+#define BILLING_BUILD_INFO_H
+namespace common {
+    static const char* BUILD_VERSION = "@billing_VERSION@";
+    static const char* BUILD_GIT_HASH = "@BILLING_GIT_HASH@";
+    static const char* BUILD_TIME = "@BILLING_BUILD_TIME@";
+    static const char* BUILD_COMPILER = "@CMAKE_CXX_COMPILER_ID@";
+    static const char* BUILD_COMPILER_VERSION = "@CMAKE_CXX_COMPILER_VERSION@";
+    static const char* BUILD_MACHINE = "@BILLING_BUILD_MACHINE@";
+}
+#endif //BILLING_BUILD_INFO_H

@@ -19,6 +19,8 @@ add_custom_command(OUTPUT ${mysqlVersionFilePath} ${mysqlLibOutPath}
         COMMAND cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${mysqlCFlagOpt} ${mysqlCxxFlagOpt} -S ${PROJECT_SOURCE_DIR}/../deps/mysql-connector-c-6.1.11-src -B ${mysqlBinaryDir}
         COMMAND cmake --build ${mysqlBinaryDir} --target ${mysqlLibTarget})
 include_directories(../deps/mysql-connector-c-6.1.11-src/include ${mysqlBinaryDir}/include ../deps/yaml-cpp/include)
+# generate build info
+include(cmake/build_info.cmake)
 #
 set(serverSourceList ${mysqlVersionFilePath})
 set(sourceDirList bhandler cmd common debug models services)

@@ -14,6 +14,7 @@
 #include <sys/signalfd.h>
 #include "server.h"
 #include "../common/billing_exception.h"
+#include "show_version_info.h"
 
 
 namespace services {
@@ -92,6 +93,7 @@ namespace services {
 
     int Server::run() {
         auto logger = this->handlerResource.logger();
+        showVersionInfo(logger);
         try {
             this->handlerResource.initDatabase();
         } catch (common::BillingException &ex) {

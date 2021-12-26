@@ -20,10 +20,13 @@ namespace services {
 
     void Logger::initLogger(const char *logFilePath) {
         using std::ofstream;
-        using std::cout;
+        using std::stringstream;
         using std::endl;
-        cout << "log file path: " << logFilePath << endl;
         this->logOutStream.open(logFilePath, ofstream::out | ofstream::app);
+        this->fileLoaded = true;
+        stringstream ss;
+        ss << "log file path: " << logFilePath;
+        this->infoLn(&ss);
     }
 
     void Logger::infoLn(const char *msg) {
@@ -31,7 +34,9 @@ namespace services {
         using std::endl;
 
         cout << colorGreen << "[info]" << colorReset << msg << endl;
-        this->logOutStream << "[info]" << msg << endl;
+        if (this->fileLoaded) {
+            this->logOutStream << "[info]" << msg << endl;
+        }
     }
 
     void Logger::infoLn(const std::stringstream *msg) {
@@ -43,7 +48,9 @@ namespace services {
         using std::endl;
 
         cerr << colorRed << "[error]" << colorReset << msg << endl;
-        this->logOutStream << "[error]" << msg << endl;
+        if (this->fileLoaded) {
+            this->logOutStream << "[error]" << msg << endl;
+        }
     }
 
     void Logger::errorLn(const std::stringstream *msg) {

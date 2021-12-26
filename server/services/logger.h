@@ -13,6 +13,7 @@ namespace services {
     class Logger {
     private:
         ofstream logOutStream;
+        bool fileLoaded = false;
     public:
         ~Logger();
 

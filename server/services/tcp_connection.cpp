@@ -54,6 +54,10 @@ namespace services {
             }
             //append
             this->inputData.insert(this->inputData.end(), buff, buff + readCount);
+            //debug
+            //std::stringstream ss;
+            //debug::dumpBuffer(ss, "input", buff, readCount);
+            //this->handlerResource->logger()->infoLn(&ss);
             //缓冲区没有数据可以读取了
             if ((size_t) readCount < buffSize) {
                 return IoStatus::Pending;

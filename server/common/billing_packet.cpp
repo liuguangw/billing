@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "billing_packet.h"
+#include "billing_exception.h"
 
 namespace common {
 
@@ -58,24 +59,6 @@ namespace common {
         return PacketParseResult::PacketOk;
     }
 
-    void BillingPacket::appendToOutput(std::vector<unsigned char> *outputData) {
-        //保证空间大小足够
-        outputData->reserve(outputData->size() + this->fullLength());
-        outputData->push_back(MASK0);
-        outputData->push_back(MASK1);
-        unsigned int lengthP = 3 + this->opData.size();
-        outputData->push_back((unsigned char) (lengthP >> 8));
-        outputData->push_back((unsigned char) (lengthP & 0xff));
-        outputData->push_back(this->opType);
-        outputData->push_back((unsigned char) (this->msgID >> 8));
-        outputData->push_back((unsigned char) (this->msgID & 0xff));
-        if (!this->opData.empty()) {
-            outputData->insert(outputData->end(), this->opData.begin(), this->opData.end());
-        }
-        outputData->push_back(MASK1);
-        outputData->push_back(MASK0);
-    }
-
     void BillingPacket::appendOpData(unsigned char data) {
         this->opData.push_back(data);
     }
@@ -109,5 +92,49 @@ namespace common {
 
     void BillingPacket::appendOpData(const unsigned char *data, size_t dataSize) {
         this->opData.insert(this->opData.end(), data, data + dataSize);
+    }
+
+    void BillingPacket::appendToOutput(std::vector<unsigned char> *outputData) const {
+        //保证空间大小足够
+        outputData->reserve(outputData->size() + this->fullLength());
+        outputData->push_back(MASK0);
+        outputData->push_back(MASK1);
+        unsigned int lengthP = 3 + this->opData.size();
+        outputData->push_back((unsigned char) (lengthP >> 8));
+        outputData->push_back((unsigned char) (lengthP & 0xff));
+        outputData->push_back(this->opType);
+        outputData->push_back((unsigned char) (this->msgID >> 8));
+        outputData->push_back((unsigned char) (this->msgID & 0xff));
+        if (!this->opData.empty()) {
+            outputData->insert(outputData->end(), this->opData.begin(), this->opData.end());
+        }
+        outputData->push_back(MASK1);
+        outputData->push_back(MASK0);
+    }
+
+    void BillingPacket::packData(unsigned char *buff, size_t buffSize) const {
+        if (this->fullLength() > buffSize) {
+            throw common::BillingException("packData failed", "buffSize is too small");
+        }
+        size_t index = 0;
+        buff[index] = MASK0;
+        buff[index + 1] = MASK1;
+        index += 2;
+        unsigned int lengthP = 3 + this->opData.size();
+        buff[index] = (unsigned char) ((lengthP >> 8) & 0xFF);
+        buff[index + 1] = (unsigned char) (lengthP & 0xFF);
+        index += 2;
+        buff[index] = this->opType;
+        buff[index + 1] = (unsigned char) ((this->msgID >> 8) & 0xFF);
+        buff[index + 2] = (unsigned char) (this->msgID & 0xFF);
+        index += 3;
+        if (!this->opData.empty()) {
+            for (auto &data: this->opData) {
+                buff[index] = data;
+                index++;
+            }
+        }
+        buff[index] = MASK1;
+        buff[index + 1] = MASK0;
     }
 }

@@ -73,7 +73,13 @@ namespace common {
         void appendOpData(const unsigned char *data, size_t dataSize);
 
         //写入数据
-        void appendToOutput(std::vector<unsigned char> *outputData);
+        void appendToOutput(std::vector<unsigned char> *outputData) const;
+
+        /**
+         * 打包为buffer,写入用户提供的buff空间,如果空间不足,则抛出异常
+         * @throws common::BillingException
+         */
+        void packData(unsigned char *buff, size_t buffSize) const;
     };
 }
 

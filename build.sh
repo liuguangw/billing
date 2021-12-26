@@ -12,7 +12,7 @@ if [ $# -ge 1 ]; then
     if [ "$arg" = "m32" ]; then
       buildM32=-DBILLING_BUILD_M32=ON
     elif [ "$arg" = "shared" ]; then
-      buildShared=-DBILLING_BUILD_SHARED=ON
+      buildShared=-DBUILD_SHARED_LIBS=ON
     fi
   done
 fi

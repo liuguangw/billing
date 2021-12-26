@@ -4,22 +4,20 @@ message("build type ${CMAKE_BUILD_TYPE}")
 project(billing VERSION 1.0.0 LANGUAGES CXX)
 # 是否编译32位
 option(BILLING_BUILD_M32 "Build 32bit billing" OFF)
-# 是否动态链接
-option(BILLING_BUILD_SHARED "Build shared link billing" OFF)
 if (BILLING_BUILD_M32)
     message("build 32bit")
     set(CMAKE_CXX_FLAGS "-m32 ${CMAKE_CXX_FLAGS}")
     set(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
 endif ()
-if (BILLING_BUILD_SHARED)
+# 是否进行动态链接
+if (${BUILD_SHARED_LIBS})
     message("build shared")
-    set(BUILD_SHARED_LIBS ON)
 else ()
     message("build static")
     set(CMAKE_CXX_FLAGS "-static ${CMAKE_CXX_FLAGS}")
     set(CMAKE_C_FLAGS "-static ${CMAKE_C_FLAGS}")
 endif ()
-
+# 动态链接库的输出路径
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 add_subdirectory(deps/yaml-cpp)
 add_subdirectory(server)

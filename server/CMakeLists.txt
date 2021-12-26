@@ -1,16 +1,21 @@
 project(server)
 
+# mysql库的编译器选项
 set(mysqlCFlagOpt "")
 set(mysqlCxxFlagOpt "")
+# 输出路径
 set(mysqlBinaryDir ${PROJECT_BINARY_DIR}/../deps/mysql)
+# 产生的重要文件
 set(mysqlVersionFilePath ${mysqlBinaryDir}/include/mysql_version.h)
 set(mysqlLibOutPath ${mysqlBinaryDir}/libmysql/libmysqlclient.a)
+# target名称
 set(mysqlLibTarget mysqlclient)
 if (BILLING_BUILD_M32)
     set(mysqlCFlagOpt "-DCMAKE_C_FLAGS=-m32")
     set(mysqlCxxFlagOpt "-DCMAKE_CXX_FLAGS-m32")
 endif ()
-if (BILLING_BUILD_SHARED)
+# 如果进行动态链接
+if (${BUILD_SHARED_LIBS})
     set(mysqlLibOutPath ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmysqlclient.so)
     set(mysqlLibTarget libmysql)
 endif ()

@@ -14,6 +14,7 @@ namespace common {
     static const unsigned char MASK0 = 0xAA;
     static const unsigned char MASK1 = 0x55;
     static const size_t PACKET_MIN_SIZE = 9;
+    static const unsigned char PACKET_RESULT_SUCCESS = 0x01;
 
     //
     static const unsigned char PACKET_TYPE_COMMAND = 0;
@@ -61,9 +62,11 @@ namespace common {
             return this->opData.size() + PACKET_MIN_SIZE;
         }
 
-        void appendOpData(unsigned int data);
+        void appendOpData(unsigned char data);
 
         void appendOpData(unsigned short data);
+
+        void appendOpData(unsigned int data);
 
         void appendOpData(const std::string &data);
 

@@ -50,7 +50,7 @@ namespace bhandler {
         //
         response->opData.reserve(mSerialKeyLength + 1);
         response->appendOpData(mSerialKey, mSerialKeyLength);
-        response->opData.push_back(0x01);
+        response->appendOpData(common::PACKET_RESULT_SUCCESS);
         //释放分配的空间
         delete[] usernameBuffer;
         delete[] charNameBuffer;

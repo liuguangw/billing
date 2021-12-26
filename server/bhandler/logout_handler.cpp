@@ -28,16 +28,22 @@ namespace bhandler {
             auto macMd5 = clientInfo->MacMd5;
             if (!macMd5.empty()) {
                 auto macCounters = this->handlerResource->macCounters();
-                auto it1 = macCounters->find(username);
+                auto it1 = macCounters->find(macMd5);
                 if (it1 != macCounters->end()) {
                     //计数器-1
                     unsigned int macCounter = it1->second;
                     if (macCounter > 0) {
                         macCounter--;
                     }
-                    macCounters->operator[](username) = macCounter;
+                    if (macCounter > 0) {
+                        macCounters->operator[](it1->first) = macCounter;
+                    } else {
+                        //归0了,直接删除key
+                        macCounters->erase(it1);
+                    }
                 }
             }
+            onlineUsers->erase(it);
         }
         //logger
         auto logger = this->handlerResource->logger();
@@ -46,9 +52,9 @@ namespace bhandler {
         logger->infoLn(&ss);
         //
         response->opData.reserve(usernameLength + 2);
-        response->opData.push_back(usernameLength);
+        response->appendOpData(usernameLength);
         response->appendOpData(usernameBuffer, usernameLength);
-        response->opData.push_back(0x01);
+        response->appendOpData(common::PACKET_RESULT_SUCCESS);
         //释放分配的空间
         delete[] usernameBuffer;
     }

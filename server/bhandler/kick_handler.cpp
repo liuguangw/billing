@@ -7,6 +7,6 @@
 namespace bhandler {
 
     void KickHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        response->opData.push_back((unsigned short) 0x01);
+        response->appendOpData(common::PACKET_RESULT_SUCCESS);
     }
 }

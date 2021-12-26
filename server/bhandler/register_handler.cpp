@@ -67,9 +67,9 @@ namespace bhandler {
         this->handlerResource->logger()->infoLn(&ss);
         //
         response->opData.reserve(usernameLength + 2);
-        response->opData.push_back(usernameLength);
+        response->appendOpData(usernameLength);
         response->appendOpData(usernameBuffer, usernameLength);
-        response->opData.push_back(registerResultCode);
+        response->appendOpData(registerResultCode);
         //释放分配的空间
         delete[] usernameBuffer;
         delete[] superPasswordBuffer;

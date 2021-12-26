@@ -26,7 +26,7 @@ namespace common {
     }
 
     unsigned int PacketDataReader::readUint() {
-        int targetValue = 0, tmpValue;
+        unsigned int targetValue = 0, tmpValue;
         for (int i = 0; i < 4; i++) {
             tmpValue = *this->it;
             this->it++;

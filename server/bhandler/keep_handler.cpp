@@ -33,9 +33,9 @@ namespace bhandler {
         logger->infoLn(&ss);
         //
         response->opData.reserve(usernameLength + 2);
-        response->opData.push_back(usernameLength);
+        response->appendOpData(usernameLength);
         response->appendOpData(usernameBuffer, usernameLength);
-        response->opData.push_back(0x01);
+        response->appendOpData(common::PACKET_RESULT_SUCCESS);
         //释放分配的空间
         delete[] usernameBuffer;
     }

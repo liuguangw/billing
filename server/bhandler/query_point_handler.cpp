@@ -64,7 +64,7 @@ namespace bhandler {
         logger->infoLn(&ss);
         unsigned int pointValue = (userPoint + 1) * 1000;
         response->opData.reserve(usernameLength + 5);
-        response->opData.push_back(usernameLength);
+        response->appendOpData(usernameLength);
         response->appendOpData(usernameBuffer, usernameLength);
         response->appendOpData(pointValue);
         //释放分配的空间

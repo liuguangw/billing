@@ -106,10 +106,10 @@ namespace bhandler {
         logger->infoLn(&ss);
         // 数据包组合
         response->opData.reserve(1 + usernameLength + orderIdLength + 1 + 4 + 2 + 4 + 2);
-        response->opData.push_back(usernameLength);
+        response->appendOpData(usernameLength);
         response->appendOpData(usernameBuffer, usernameLength);
         response->appendOpData(orderIDBytes, orderIdLength);
-        response->opData.push_back(convertResult);
+        response->appendOpData(convertResult);
         //写入剩余点数:u4(此值不会被用到,服务端以购买的数量来进行计算)
         response->appendOpData(leftPoint * 1000);
         //mGoodsTypeNum:u2

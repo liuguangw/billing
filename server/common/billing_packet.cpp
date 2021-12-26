@@ -76,6 +76,19 @@ namespace common {
         outputData->push_back(MASK0);
     }
 
+    void BillingPacket::appendOpData(unsigned char data) {
+        this->opData.push_back(data);
+    }
+
+    void BillingPacket::appendOpData(unsigned short data) {
+        unsigned short tmp = data;
+        tmp >>= 8;
+        tmp &= 0xFF;
+        this->opData.push_back((unsigned char) tmp);
+        tmp = data & 0xFF;
+        this->opData.push_back((unsigned char) tmp);
+    }
+
     void BillingPacket::appendOpData(unsigned int data) {
         unsigned int tmp;
         for (auto i = 0; i < 4; i++) {
@@ -86,15 +99,6 @@ namespace common {
             tmp &= 0xFF;
             this->opData.push_back((unsigned char) tmp);
         }
-    }
-
-    void BillingPacket::appendOpData(unsigned short data) {
-        unsigned short tmp = data;
-        tmp >>= 8;
-        tmp &= 0xFF;
-        this->opData.push_back((unsigned char) tmp);
-        tmp = data & 0xFF;
-        this->opData.push_back((unsigned char) tmp);
     }
 
     void BillingPacket::appendOpData(const std::string &data) {

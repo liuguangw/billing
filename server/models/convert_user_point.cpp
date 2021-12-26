@@ -27,7 +27,7 @@ namespace models {
         bind[offset].is_null = nullptr;
         bind[offset].length = nullptr;
         offset++;
-		//
+        //
         unsigned long nameSize = strlen(username);
         bind[offset].buffer_type = MYSQL_TYPE_STRING;
         bind[offset].buffer = (void *) username;

@@ -22,19 +22,19 @@ namespace services {
             if (loginUserInfo->IP.empty()) {
                 clientInfo.IP = loginUserInfo->IP;
             }
-            loginUsers->erase(it->first);
+            loginUsers->erase(it);
         }
         //写入onlineUsers
         onlineUsers->operator[](username) = clientInfo;
         //mac计数+1
         if (!clientInfo.MacMd5.empty()) {
             unsigned int counterValue = 0;
-            auto it1 = macCounters->find(username);
+            auto it1 = macCounters->find(clientInfo.MacMd5);
             if (it1 != macCounters->end()) {
                 counterValue = it1->second;
             }
             counterValue++;
-            macCounters->operator[](username) = counterValue;
+            macCounters->operator[](clientInfo.MacMd5) = counterValue;
         }
     }
 }

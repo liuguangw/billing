@@ -16,6 +16,7 @@ namespace services {
         explicit PacketClient(const common::ServerConfig &serverConfig);
 
         ~PacketClient();
+
         /**
          * 执行发送packet
          * @return 返回第一个响应包
@@ -43,7 +44,7 @@ namespace services {
          * @param responsePacket
          * @throws common::BillingException
          */
-        void runLoop(bool connected,const common::BillingPacket &requestPacket, common::BillingPacket& responsePacket);
+        void runLoop(bool connected, const common::BillingPacket &requestPacket, common::BillingPacket &responsePacket);
 
         /**
          * 检测connect的结果,如果结果是失败则抛出异常

@@ -13,33 +13,26 @@ namespace bhandler {
 
     void LoginHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
         PacketDataReader packetReader(&request.opData);
-        //分配空间:用户名
+        std::vector<unsigned char> usernameBuffer, passwordBuffer, loginIPBuffer, macMd5Buffer;
+        //用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
-        auto usernameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(usernameBuffer, tmpLength);
-        string username;
-        PacketDataReader::buildString(username, usernameBuffer, tmpLength);
-        //分配空间:密码
+        string username = PacketDataReader::buildString(usernameBuffer);
+        //密码
         tmpLength = packetReader.readByte();
-        auto passwordBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(passwordBuffer, tmpLength);
-        string password;
-        PacketDataReader::buildString(password, passwordBuffer, tmpLength);
-        //分配空间:登录IP
+        string password = PacketDataReader::buildString(passwordBuffer);
+        //登录IP
         tmpLength = packetReader.readByte();
-        auto loginIPBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(loginIPBuffer, tmpLength);
-        string loginIP;
-        PacketDataReader::buildString(loginIP, loginIPBuffer, tmpLength);
+        string loginIP = PacketDataReader::buildString(loginIPBuffer);
         //跳过level,密码卡数据
         packetReader.skip(2 + 6 + 6);
         //macMd5
         const unsigned int macMd5BufferSize = 32;
-        unsigned char macMd5Buffer[macMd5BufferSize];
         packetReader.readBuffer(macMd5Buffer, macMd5BufferSize);
-        string macMd5;
-        PacketDataReader::buildString(macMd5, macMd5Buffer, macMd5BufferSize);
+        string macMd5 = PacketDataReader::buildString(macMd5Buffer);
         //初始化
         unsigned char loginResultCode = loginCodeSuccess;
         models::LoginResult loginResult;
@@ -109,11 +102,7 @@ namespace bhandler {
         //
         response.opData.reserve(usernameLength + 2);
         response.appendOpData(usernameLength);
-        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(usernameBuffer);
         response.appendOpData(loginResultCode);
-        //释放分配的空间
-        delete[] usernameBuffer;
-        delete[] passwordBuffer;
-        delete[] loginIPBuffer;
     }
 }

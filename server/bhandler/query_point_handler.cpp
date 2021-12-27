@@ -17,25 +17,20 @@ namespace bhandler {
 
     void QueryPointHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
         PacketDataReader packetReader(&request.opData);
-        //分配空间:用户名
+        std::vector<unsigned char> usernameBuffer, loginIPBuffer, charNameBuffer;
+        //用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
-        auto usernameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(usernameBuffer, tmpLength);
-        string username;
-        PacketDataReader::buildString(username, usernameBuffer, tmpLength);
-        //分配空间:登录IP
+        string username = PacketDataReader::buildString(usernameBuffer);
+        //登录IP
         tmpLength = packetReader.readByte();
-        auto loginIPBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(loginIPBuffer, tmpLength);
-        string loginIP;
-        PacketDataReader::buildString(loginIP, loginIPBuffer, tmpLength);
-        //分配空间:角色名
+        string loginIP = PacketDataReader::buildString(loginIPBuffer);
+        //角色名
         tmpLength = packetReader.readByte();
-        auto charNameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(charNameBuffer, tmpLength);
-        string charName;
-        PacketDataReader::buildString(charName, charNameBuffer, tmpLength);
+        string charName = PacketDataReader::buildString(charNameBuffer);
         //查询数据库获取用户当前点数余额
         unsigned int userPoint = 0;
         Account account{};
@@ -65,11 +60,7 @@ namespace bhandler {
         unsigned int pointValue = (userPoint + 1) * 1000;
         response.opData.reserve(usernameLength + 5);
         response.appendOpData(usernameLength);
-        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(usernameBuffer);
         response.appendOpData(pointValue);
-        //释放分配的空间
-        delete[] usernameBuffer;
-        delete[] loginIPBuffer;
-        delete[] charNameBuffer;
     }
 }

@@ -16,29 +16,23 @@ namespace bhandler {
 
     void ConvertPointHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
         PacketDataReader packetReader(&request.opData);
-        //分配空间:用户名
+        std::vector<unsigned char> usernameBuffer, loginIPBuffer, charNameBuffer, orderIDBuffer;
+        //用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
-        auto usernameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(usernameBuffer, tmpLength);
-        string username;
-        PacketDataReader::buildString(username, usernameBuffer, tmpLength);
-        //分配空间:登录IP
+        string username = PacketDataReader::buildString(usernameBuffer);
+        //登录IP
         tmpLength = packetReader.readByte();
-        auto loginIPBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(loginIPBuffer, tmpLength);
-        string loginIP;
-        PacketDataReader::buildString(loginIP, loginIPBuffer, tmpLength);
-        //分配空间:角色名
+        string loginIP = PacketDataReader::buildString(loginIPBuffer);
+        //角色名
         tmpLength = packetReader.readByte();
-        auto charNameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(charNameBuffer, tmpLength);
-        string charName;
-        PacketDataReader::buildString(charName, charNameBuffer, tmpLength);
+        string charName = PacketDataReader::buildString(charNameBuffer);
         //orderId 21u
         const unsigned int orderIdLength = 21;
-        unsigned char orderIDBytes[orderIdLength];
-        packetReader.readBuffer(orderIDBytes, orderIdLength);
+        packetReader.readBuffer(orderIDBuffer, orderIdLength);
         //始终为1
         unsigned short mGoodsTypeNum = packetReader.readUShort();
         //物品类型: 999表示买元宝
@@ -107,8 +101,8 @@ namespace bhandler {
         // 数据包组合
         response.opData.reserve(1 + usernameLength + orderIdLength + 1 + 4 + 2 + 4 + 2);
         response.appendOpData(usernameLength);
-        response.appendOpData(usernameBuffer, usernameLength);
-        response.appendOpData(orderIDBytes, orderIdLength);
+        response.appendOpData(usernameBuffer);
+        response.appendOpData(orderIDBuffer);
         response.appendOpData(convertResult);
         //写入剩余点数:u4(此值不会被用到,服务端以购买的数量来进行计算)
         response.appendOpData(leftPoint * 1000);
@@ -122,9 +116,5 @@ namespace bhandler {
             mGoodsNumber = (unsigned short) (realPoint & 0xFFFF);
         }
         response.appendOpData(mGoodsNumber);
-        //释放分配的空间
-        delete[] usernameBuffer;
-        delete[] loginIPBuffer;
-        delete[] charNameBuffer;
     }
 }

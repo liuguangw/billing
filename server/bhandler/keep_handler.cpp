@@ -13,13 +13,12 @@ namespace bhandler {
 
     void KeepHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
         PacketDataReader packetReader(&request.opData);
-        //分配空间:用户名
+        std::vector<unsigned char> usernameBuffer;
+        //用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
-        auto usernameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(usernameBuffer, tmpLength);
-        string username;
-        PacketDataReader::buildString(username, usernameBuffer, tmpLength);
+        string username = PacketDataReader::buildString(usernameBuffer);
         //等级
         auto playerLevel = packetReader.readUShort();
         //标记在线
@@ -34,9 +33,7 @@ namespace bhandler {
         //
         response.opData.reserve(usernameLength + 2);
         response.appendOpData(usernameLength);
-        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(usernameBuffer);
         response.appendOpData(common::PACKET_RESULT_SUCCESS);
-        //释放分配的空间
-        delete[] usernameBuffer;
     }
 }

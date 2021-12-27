@@ -15,37 +15,28 @@ namespace bhandler {
 
     void RegisterHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
         PacketDataReader packetReader(&request.opData);
-        //分配空间:用户名
+        std::vector<unsigned char> usernameBuffer, superPasswordBuffer, passwordBuffer, registerIPBuffer, emailBuffer;
+        //用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
-        auto usernameBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(usernameBuffer, tmpLength);
-        string username;
-        PacketDataReader::buildString(username, usernameBuffer, tmpLength);
-        //分配空间:超级密码
+        string username = PacketDataReader::buildString(usernameBuffer);
+        //超级密码
         tmpLength = packetReader.readByte();
-        auto superPasswordBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(superPasswordBuffer, tmpLength);
-        string superPassword;
-        PacketDataReader::buildString(superPassword, superPasswordBuffer, tmpLength);
-        //分配空间:密码
+        string superPassword = PacketDataReader::buildString(superPasswordBuffer);
+        //密码
         tmpLength = packetReader.readByte();
-        auto passwordBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(passwordBuffer, tmpLength);
-        string password;
-        PacketDataReader::buildString(password, passwordBuffer, tmpLength);
-        //分配空间:注册IP
+        string password = PacketDataReader::buildString(passwordBuffer);
+        //注册IP
         tmpLength = packetReader.readByte();
-        auto registerIPBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(registerIPBuffer, tmpLength);
-        string registerIP;
-        PacketDataReader::buildString(registerIP, registerIPBuffer, tmpLength);
-        //分配空间:email
+        string registerIP = PacketDataReader::buildString(registerIPBuffer);
+        //email
         tmpLength = packetReader.readByte();
-        auto emailBuffer = new unsigned char[tmpLength];
         packetReader.readBuffer(emailBuffer, tmpLength);
-        string email;
-        PacketDataReader::buildString(email, emailBuffer, tmpLength);
+        string email = PacketDataReader::buildString(emailBuffer);
         //
         Account account{
                 .Name=username,
@@ -68,13 +59,7 @@ namespace bhandler {
         //
         response.opData.reserve(usernameLength + 2);
         response.appendOpData(usernameLength);
-        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(usernameBuffer);
         response.appendOpData(registerResultCode);
-        //释放分配的空间
-        delete[] usernameBuffer;
-        delete[] superPasswordBuffer;
-        delete[] passwordBuffer;
-        delete[] registerIPBuffer;
-        delete[] emailBuffer;
     }
 }

@@ -45,7 +45,7 @@ namespace bhandler {
                 .Email=email};
         unsigned char registerResultCode = 0x01;
         string registerResultText = "success";
-        auto registerResult=models::registerAccount(this->handlerResource.DbConn(), account);
+        auto registerResult = models::registerAccount(this->handlerResource.DbConn(), account);
         if (registerResult.hasError) {
             registerResultCode = 0x04;
             registerResultText = registerResult.message;

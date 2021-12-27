@@ -30,6 +30,7 @@ namespace services {
         if (this->connFd != -1) {
             close(this->connFd);
         }
+        //std::cout<<"PacketClient::~PacketClient"<<std::endl;
     }
 
     bool PacketClient::initSocket() {

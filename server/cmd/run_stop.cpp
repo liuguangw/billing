@@ -35,12 +35,8 @@ namespace cmd {
         services::PacketClient client(serverConfig);
         services::Logger logger;
         try {
-            auto response = client.execute(request);
+            client.execute(request);
             logger.infoLn("stop command sent successfully");
-            //todo debug
-            std::stringstream ss;
-            debug::dumpPacket(ss, "response", &response);
-            logger.infoLn(ss);
         } catch (common::BillingException &ex) {
             logger.errorLn(ex.what());
             return EXIT_FAILURE;

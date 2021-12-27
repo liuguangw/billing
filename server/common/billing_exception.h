@@ -24,6 +24,7 @@ namespace common {
         const char *what() const noexcept override {
             return this->message.c_str();
         }
+
     private:
         string message;
     };

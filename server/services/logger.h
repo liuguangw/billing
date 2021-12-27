@@ -27,6 +27,7 @@ namespace services {
         void errorLn(const char *msg);
 
         void errorLn(const std::stringstream &msg);
+
     private:
         ofstream logOutStream;
         bool fileLoaded = false;

@@ -16,7 +16,7 @@ namespace services {
         //从loginUsers中删除
         it = loginUsers.find(username);
         if (it != loginUsers.end()) {
-            auto& loginUserInfo = it->second;
+            auto &loginUserInfo = it->second;
             //补充字段信息
             clientInfo.MacMd5 = loginUserInfo.MacMd5;
             if (clientInfo.IP.empty()) {
@@ -34,7 +34,7 @@ namespace services {
                 counterValue = it1->second;
             }
             counterValue++;
-            macCounters[clientInfo.MacMd5]= counterValue;
+            macCounters[clientInfo.MacMd5] = counterValue;
         }
     }
 }

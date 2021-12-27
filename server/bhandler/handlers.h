@@ -5,6 +5,7 @@
 #ifndef BILLING_HANDLERS_H
 #define BILLING_HANDLERS_H
 
+#include "command_handler.h"
 #include "connect_handler.h"
 #include "ping_handler.h"
 #include "login_handler.h"

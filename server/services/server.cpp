@@ -73,7 +73,7 @@ namespace services {
         setsockopt(this->serverSockFd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
         sockaddr_in serverAddress{};
         serverAddress.sin_family = AF_INET;
-        auto& serverConfig = this->handlerResource.config();
+        auto &serverConfig = this->handlerResource.config();
         serverAddress.sin_addr.s_addr = inet_addr(serverConfig.IP.c_str());
         serverAddress.sin_port = htons(serverConfig.Port);
         if (bind(this->serverSockFd, (sockaddr *) &serverAddress, sizeof(serverAddress)) < 0) {
@@ -149,6 +149,10 @@ namespace services {
                     this->processConnEvent(events[n]);
                 }
             }
+            //判断是否应该停止
+            if (this->handlerResource.markStop()) {
+                break;
+            }
         }
     }
 
@@ -170,7 +174,7 @@ namespace services {
     }
 
     void Server::processAcceptConnEvent(epoll_event &connEvent) {
-        auto& logger = this->handlerResource.logger();
+        auto &logger = this->handlerResource.logger();
         sockaddr_in remoteAddress{};
         socklen_t remoteAddressLength = sizeof(remoteAddress);
         int connFd = accept4(this->serverSockFd,

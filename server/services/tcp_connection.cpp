@@ -45,7 +45,9 @@ namespace services {
     }
 
     void TcpConnection::initPacketHandlers() {
-        common::PacketHandler *handler = new bhandler::ConnectHandler;
+        common::PacketHandler *handler = new bhandler::CommandHandler(this->handlerResource);
+        this->addHandler(handler);
+        handler = new bhandler::ConnectHandler;
         this->addHandler(handler);
         handler = new bhandler::PingHandler(this->handlerResource);
         this->addHandler(handler);

@@ -23,8 +23,8 @@ namespace bhandler {
         auto &onlineUsers = this->handlerResource.onlineUsers();
         auto it = onlineUsers.find(username);
         if (it != onlineUsers.end()) {
-            auto& clientInfo = it->second;
-            auto& macMd5 = clientInfo.MacMd5;
+            auto &clientInfo = it->second;
+            auto &macMd5 = clientInfo.MacMd5;
             if (!macMd5.empty()) {
                 auto &macCounters = this->handlerResource.macCounters();
                 auto it1 = macCounters.find(macMd5);

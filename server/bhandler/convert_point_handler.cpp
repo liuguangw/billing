@@ -54,7 +54,7 @@ namespace bhandler {
         Account account{};
         bool exists = false;
         auto dbConn = this->handlerResource.DbConn();
-        auto& logger = this->handlerResource.logger();
+        auto &logger = this->handlerResource.logger();
         std::stringstream ss;
         try {
             exists = models::loadAccountByUsername(dbConn, username.c_str(), account);

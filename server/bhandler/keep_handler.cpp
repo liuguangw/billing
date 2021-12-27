@@ -27,7 +27,7 @@ namespace bhandler {
         services::markOnline(this->handlerResource.loginUsers(), this->handlerResource.onlineUsers(),
                              this->handlerResource.macCounters(), username.c_str(), clientInfo);
         //logger
-        auto& logger = this->handlerResource.logger();
+        auto &logger = this->handlerResource.logger();
         std::stringstream ss;
         ss << "keep: user [" << username << "] level " << playerLevel;
         logger.infoLn(ss);

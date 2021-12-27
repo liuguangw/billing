@@ -35,8 +35,8 @@ namespace bhandler {
         string macMd5 = PacketDataReader::buildString(macMd5Buffer);
         //初始化
         unsigned char loginResultCode = loginCodeSuccess;
-        auto loginResult = models::checkLogin( this->handlerResource.DbConn(), this->handlerResource.onlineUsers(),
-                           username.c_str(), password.c_str());
+        auto loginResult = models::checkLogin(this->handlerResource.DbConn(), this->handlerResource.onlineUsers(),
+                                              username.c_str(), password.c_str());
         string loginResultDescription = loginResult.message;
         switch (loginResult.loginError) {
             case models::LoginNoError:
@@ -74,7 +74,7 @@ namespace bhandler {
         //判断此电脑的连接数是否达到限制
         if (loginResultCode == loginCodeSuccess && this->pcMaxClientCount > 0) {
             unsigned int macCounter = 0;
-            auto& macCounters = this->handlerResource.macCounters();
+            auto &macCounters = this->handlerResource.macCounters();
             auto it = macCounters.find(macMd5);
             if (it != macCounters.end()) {
                 macCounter = it->second;
@@ -89,11 +89,11 @@ namespace bhandler {
             common::ClientInfo clientInfo{
                     .IP = loginIP,
                     .MacMd5 = macMd5};
-            auto& loginUsers = this->handlerResource.loginUsers();
-            loginUsers[username]= clientInfo;
+            auto &loginUsers = this->handlerResource.loginUsers();
+            loginUsers[username] = clientInfo;
         }
         //logger
-        auto& logger = this->handlerResource.logger();
+        auto &logger = this->handlerResource.logger();
         std::stringstream ss;
         ss << "user [" << username << "] try to login from " << loginIP << "(Mac_md5=" << macMd5 << ") : "
            << loginResultDescription;

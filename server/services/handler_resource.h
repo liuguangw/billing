@@ -39,6 +39,16 @@ namespace services {
             return this->mMacCounters;
         }
 
+        //判断是否标记为需要停止服务
+        bool markStop() const {
+            return this->mStop;
+        }
+
+        //修改标记状态
+        void markStop(bool stopFlag) {
+            this->mStop = stopFlag;
+        }
+
         void initResource(const char *configFilePath, const char *logFilePath);
 
         void initDatabase();
@@ -52,6 +62,8 @@ namespace services {
         std::map<std::string, common::ClientInfo> mLoginUsers;
         std::map<std::string, common::ClientInfo> mOnlineUsers;
         std::map<std::string, unsigned int> mMacCounters;
+        //标记是否应该停止服务
+        bool mStop = false;
 
         void initConfig(const char *configFilePath);
 

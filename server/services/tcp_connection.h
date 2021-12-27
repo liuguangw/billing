@@ -15,29 +15,7 @@
 
 namespace services {
     class TcpConnection {
-    private:
-        int connFd;
-        std::string ipAddress;
-        unsigned short port;
-        HandlerResource *handlerResource;
-        std::vector<unsigned char> inputData;
-        std::vector<unsigned char> outputData;
-        std::map<unsigned char, common::PacketHandler *> packetHandlers;
-
-        //尽可能的读取数据,直到缓冲区没有数据可以读取
-        common::IoStatus readAll(unsigned char *buff);
-
-        //尽可能的写入数据,直到缓冲区没有空间可以写入
-        common::IoStatus writeAll(unsigned char *buff);
-
-        void addHandler(common::PacketHandler *handler);
-
-        //初始化handlers
-        void initPacketHandlers();
-
     public:
-        //读写时buffer的大小
-        static const size_t buffSize = 1024;
 
         explicit TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource *hResource);
 
@@ -47,17 +25,38 @@ namespace services {
          * 处理连接事件
          * @param readAble 是否可读
          * @param writeAble 是否可写
-         * @return 操作成功时返回
+         * @return 操作成功时返回true
          */
         bool processConn(bool readAble, bool writeAble);
 
         /**
          * 处理读取到的数据
          * @param writeAble 是否可写
-         * @param buffer 用于写入的临时buffer
-         * @return 操作成功时返回
+         * @return 操作成功时返回true
          */
-        bool processInputData(bool writeAble, unsigned char *buffer);
+        bool processInputData(bool writeAble);
+
+        /**
+         * 处理发送outputData里的数据
+         * @return 操作成功时返回true
+         */
+        bool processSendOutputData();
+
+    private:
+        // socket连接
+        int connFd;
+        std::string ipAddress;
+        unsigned short port;
+        HandlerResource *handlerResource;
+        std::vector<unsigned char> inputData;
+        std::vector<unsigned char> outputData;
+        std::map<unsigned char, common::PacketHandler *> packetHandlers;
+
+        //添加handler
+        void addHandler(common::PacketHandler *handler);
+
+        //初始化handlers
+        void initPacketHandlers();
     };
 }
 

@@ -15,8 +15,8 @@ namespace bhandler {
     using common::BillingException;
     using models::Account;
 
-    void QueryPointHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        PacketDataReader packetReader(&request->opData);
+    void QueryPointHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        PacketDataReader packetReader(&request.opData);
         //分配空间:用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
@@ -63,10 +63,10 @@ namespace bhandler {
         ss << "user [" << username << "] " << charName << " query point (" << userPoint << ") at " << loginIP;
         logger->infoLn(&ss);
         unsigned int pointValue = (userPoint + 1) * 1000;
-        response->opData.reserve(usernameLength + 5);
-        response->appendOpData(usernameLength);
-        response->appendOpData(usernameBuffer, usernameLength);
-        response->appendOpData(pointValue);
+        response.opData.reserve(usernameLength + 5);
+        response.appendOpData(usernameLength);
+        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(pointValue);
         //释放分配的空间
         delete[] usernameBuffer;
         delete[] loginIPBuffer;

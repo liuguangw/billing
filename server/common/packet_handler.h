@@ -15,7 +15,7 @@ namespace common {
         virtual unsigned char getType() = 0;
 
         // GetResponse 根据请求获得响应
-        virtual void loadResponse(const BillingPacket *request, BillingPacket *response) = 0;
+        virtual void loadResponse(const BillingPacket &request, BillingPacket &response) = 0;
 
         virtual ~PacketHandler() = default;
     };

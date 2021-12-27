@@ -11,8 +11,8 @@ namespace bhandler {
     using std::string;
     using common::PacketDataReader;
 
-    void LogoutHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        PacketDataReader packetReader(&request->opData);
+    void LogoutHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        PacketDataReader packetReader(&request.opData);
         //分配空间:用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
@@ -51,10 +51,10 @@ namespace bhandler {
         ss << "user [" << username << "] logout game";
         logger->infoLn(&ss);
         //
-        response->opData.reserve(usernameLength + 2);
-        response->appendOpData(usernameLength);
-        response->appendOpData(usernameBuffer, usernameLength);
-        response->appendOpData(common::PACKET_RESULT_SUCCESS);
+        response.opData.reserve(usernameLength + 2);
+        response.appendOpData(usernameLength);
+        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(common::PACKET_RESULT_SUCCESS);
         //释放分配的空间
         delete[] usernameBuffer;
     }

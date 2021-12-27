@@ -10,8 +10,8 @@ namespace bhandler {
     using std::string;
     using common::PacketDataReader;
 
-    void CostLogHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        PacketDataReader packetReader(&request->opData);
+    void CostLogHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        PacketDataReader packetReader(&request.opData);
         const unsigned int mSerialKeyLength = 21;
         unsigned char mSerialKey[mSerialKeyLength];
         packetReader.readBuffer(mSerialKey, mSerialKeyLength);
@@ -48,9 +48,9 @@ namespace bhandler {
         services::markOnline(this->handlerResource->loginUsers(), this->handlerResource->onlineUsers(),
                              this->handlerResource->macCounters(), username.c_str(), clientInfo);
         //
-        response->opData.reserve(mSerialKeyLength + 1);
-        response->appendOpData(mSerialKey, mSerialKeyLength);
-        response->appendOpData(common::PACKET_RESULT_SUCCESS);
+        response.opData.reserve(mSerialKeyLength + 1);
+        response.appendOpData(mSerialKey, mSerialKeyLength);
+        response.appendOpData(common::PACKET_RESULT_SUCCESS);
         //释放分配的空间
         delete[] usernameBuffer;
         delete[] charNameBuffer;

@@ -6,43 +6,50 @@
 #define BILLING_PACKET_CLIENT_H
 
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include "../common/server_config.h"
 #include "../common/billing_packet.h"
 
 namespace services {
     class PacketClient {
+    public:
+        explicit PacketClient(const common::ServerConfig &serverConfig);
+
+        ~PacketClient();
+        /**
+         * 执行发送packet
+         * @return 返回第一个响应包
+         * @throws common::BillingException
+         */
+        common::BillingPacket execute(const common::BillingPacket &requestPacket);
+
     private:
         int connFd = -1;
         int epollFd = -1;
-        const char *serverIp;
-        unsigned short serverPort;
-
-        void runLoop(bool connected, const unsigned char *requestBuff, size_t requestBuffSize,
-                     common::BillingPacket *response);
+        //服务器的地址+端口信息
+        sockaddr_in serverEndpoint{};
 
         /**
-         * 写buff
-         * @param fd
-         * @param buff
-         * @param offset 偏移位置
-         * @param leftDataSize offset到后面剩余的数据长度
-         * @param writeTotalSize 写入成功时,增加writeTotalSize的值
-         * @return void
+         * 初始化socket连接
+         * @return bool 连接是否已经成功建立
          * @throws common::BillingException
          */
-        void writeBuff(int fd, const unsigned char *buff, size_t offset, size_t leftDataSize, size_t *writeTotalSize);
+        bool initSocket();
 
-        void readPacket(int fd, std::vector<unsigned char> *responseBuff,
-                        common::BillingPacket *responsePacket, common::PacketParseResult *packetParseResult);
+        /**
+         * 运行epoll循环,直到读取到响应包
+         * @param connected
+         * @param requestPacket
+         * @param responsePacket
+         * @throws common::BillingException
+         */
+        void runLoop(bool connected,const common::BillingPacket &requestPacket, common::BillingPacket& responsePacket);
 
-    public:
-        explicit PacketClient(const common::ServerConfig *serverConfig);
-
-        ~PacketClient();
-
-        void sendPacket(const unsigned char *requestBuff, size_t requestBuffSize, common::BillingPacket *response);
-
-        void waitForConnect(sockaddr *serverAddress, socklen_t serverAddressLength);
+        /**
+         * 检测connect的结果,如果结果是失败则抛出异常
+         * @throws common::BillingException
+         */
+        void checkConnectionStatus() const;
     };
 }
 #endif //BILLING_PACKET_CLIENT_H

@@ -24,7 +24,7 @@ namespace bhandler {
             return common::PACKET_TYPE_COSTLOG;
         }
 
-        void loadResponse(const BillingPacket *request, BillingPacket *response) override;
+        void loadResponse(const BillingPacket &request, BillingPacket &response) override;
     };
 }
 

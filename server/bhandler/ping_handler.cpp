@@ -8,8 +8,8 @@
 
 namespace bhandler {
 
-    void PingHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        common::PacketDataReader packetReader(&request->opData);
+    void PingHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        common::PacketDataReader packetReader(&request.opData);
         auto zoneID = packetReader.readUShort();
         auto worldID = packetReader.readUShort();
         auto playerCount = packetReader.readUShort();
@@ -21,6 +21,6 @@ namespace bhandler {
                << ", playerCount=" << playerCount;
             this->handlerResource->logger()->infoLn(&ss);
         }
-        response->appendOpData((unsigned short) 0x0100);
+        response.appendOpData((unsigned short) 0x0100);
     }
 }

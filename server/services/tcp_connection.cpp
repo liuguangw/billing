@@ -4,12 +4,13 @@
 
 #include <unistd.h>
 #include <iomanip>
+#include <cstring>
 #include "../common/billing_exception.h"
 #include "../bhandler/handlers.h"
 #include "../debug/dump_buffer.h"
 #include "../debug/dump_packet.h"
 #include "tcp_connection.h"
-#include "fill_buffer.h"
+#include "io_tools.h"
 
 namespace services {
     using common::IoStatus;
@@ -37,71 +38,6 @@ namespace services {
         ss << "TcpConnection destroy fd:" << this->connFd;
         ss << "(" << this->ipAddress << ":" << this->port << ")";
         logger->infoLn(&ss);
-    }
-
-    IoStatus TcpConnection::readAll(unsigned char *buff) {
-        ssize_t readCount;
-        while (true) {
-            readCount = read(this->connFd, buff, buffSize);
-            if (readCount < 0) {
-                if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                    return IoStatus::Pending;
-                } else {
-                    return IoStatus::Error;
-                }
-            } else if (readCount == 0) {
-                return IoStatus::Disconnected;
-            }
-            //append
-            this->inputData.insert(this->inputData.end(), buff, buff + readCount);
-            //debug
-            //std::stringstream ss;
-            //debug::dumpBuffer(ss, "input", buff, readCount);
-            //this->handlerResource->logger()->infoLn(&ss);
-            //缓冲区没有数据可以读取了
-            if ((size_t) readCount < buffSize) {
-                return IoStatus::Pending;
-            }
-        }
-    }
-
-    IoStatus TcpConnection::writeAll(unsigned char *buff) {
-        size_t writeCountTotal = 0, writeCount, fillCount;
-        IoStatus result = IoStatus::Ok;
-        while (writeCountTotal < this->outputData.size()) {
-            fillCount = fillBuffer(&this->outputData, writeCountTotal, buff, buffSize);
-            if (fillCount == 0) {
-                break;
-            }
-            writeCount = write(this->connFd, buff, fillCount);
-            writeCountTotal += writeCount;
-            if (writeCount < 0) {
-                if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                    result = IoStatus::Pending;
-                    break;
-                } else {
-                    return IoStatus::Error;
-                }
-            } else if (writeCount == 0) {
-                return IoStatus::Disconnected;
-            }
-            //缓冲区满了
-            if ((size_t) writeCount < fillCount) {
-                result = IoStatus::Pending;
-                break;
-            }
-        }
-        if (writeCountTotal > 0) {
-            //删除左侧已经发送了的数据
-            if (writeCountTotal < this->outputData.size()) {
-                auto it = this->outputData.begin();
-                this->outputData.erase(it, it + (int) writeCountTotal);
-            } else {
-                //全部发送完了,直接清空
-                this->outputData.clear();
-            }
-        }
-        return result;
     }
 
 
@@ -135,37 +71,47 @@ namespace services {
     }
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
-        unsigned char buffer[buffSize];
+        ssize_t tmpSize;
+        auto logger = this->handlerResource->logger();
         //写入上一轮没有成功写入的数据
         if (writeAble && !this->outputData.empty()) {
-            //logger->infoLn("writeAll");
-            auto status = this->writeAll(buffer);
-            if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
+            if (!this->processSendOutputData()) {
                 return false;
+            }
+            //系统缓冲区满了,暂时不能写入更多数据了
+            if (!this->outputData.empty()) {
+                writeAble = false;
             }
         }
         if (readAble) {
+            const unsigned int buffSize = 1024;
+            unsigned char buffer[buffSize];
             //logger->infoLn("readAll");
-            auto status = this->readAll(buffer);
-            if (status != IoStatus::Pending) {
+            tmpSize = ioReadAll(this->connFd, this->inputData, buffer, buffSize);
+            if (tmpSize < 0) {
+                std::stringstream ss;
+                ss << "read failed: " << strerror(errno);
+                logger->errorLn(&ss);
+                return false;
+            } else if (tmpSize == 0) {
+                logger->infoLn("client disconnected");
                 return false;
             }
         }
         //处理读取到的数据
         if (!this->inputData.empty()) {
-            return this->processInputData(writeAble, buffer);
+            return this->processInputData(writeAble);
         }
         return true;
     }
 
 
-    bool TcpConnection::processInputData(bool writeAble, unsigned char *buffer) {
+    bool TcpConnection::processInputData(bool writeAble) {
         using common::PacketParseResult;
-
         common::BillingPacket request, response;
-        PacketParseResult parseResult;
         //已成功解析的数据包总大小
         size_t parseTotalSize = 0;
+        PacketParseResult parseResult;
         std::map<unsigned char, common::PacketHandler *>::iterator handlerIt;
         common::PacketHandler *handler;
         auto logger = this->handlerResource->logger();
@@ -194,31 +140,38 @@ namespace services {
                 ss.str("");
                 debug::dumpPacket(ss, "request", &request);
                 logger->infoLn(&ss);
-                break;
+                continue;
             }
-            response.prepareResponse(&request);
-            handler->loadResponse(&request, &response);
-            response.appendToOutput(&this->outputData);
+            response.prepareResponse(request);
+            handler->loadResponse(request, response);
+            response.packData(this->outputData);
             if (writeAble) {
-                //logger->infoLn("writePacket");
-                auto status = this->writeAll(buffer);
-                if ((status == IoStatus::Error) || (status == IoStatus::Disconnected)) {
+                if (!this->processSendOutputData()) {
                     return false;
                 }
-                if (status == IoStatus::Pending) {
+                //系统缓冲区满了,暂时不能写入更多数据了
+                if (!this->outputData.empty()) {
                     writeAble = false;
                 }
             }
         }
         if (parseTotalSize > 0) {
             //删除左侧已经解析了的数据
-            if (parseTotalSize < this->inputData.size()) {
-                auto it = this->inputData.begin();
-                this->inputData.erase(it, it + (int) parseTotalSize);
-            } else {
-                //全部解析完了,直接清空
-                this->inputData.clear();
-            }
+            ioRemoveLeftBuffer(this->inputData, parseTotalSize);
+        }
+        return true;
+    }
+
+    bool TcpConnection::processSendOutputData() {
+        ssize_t writeCount = ioWriteBuffer(this->connFd, this->outputData.data(), this->outputData.size());
+        if (writeCount < 0) {
+            std::stringstream ss;
+            ss << "write failed: " << strerror(errno);
+            this->handlerResource->logger()->errorLn(&ss);
+            return false;
+        } else if (writeCount > 0) {
+            //删除左侧已经发送了的数据
+            ioRemoveLeftBuffer(this->outputData, (size_t) writeCount);
         }
         return true;
     }

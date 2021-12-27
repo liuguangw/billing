@@ -14,7 +14,7 @@ namespace common {
 
     struct ServerConfig {
         string IP;   //billing服务器listen的IP
-        int Port;      //billing服务器listen的端口
+        unsigned short Port;      //billing服务器listen的端口
         string DbHost;              //数据库主机名或者IP
         int DbPort;                        //数据库端口
         string DbUser;                     //数据库用户名

@@ -48,7 +48,7 @@ namespace common {
 
         BillingPacket() = default;
 
-        void prepareResponse(const BillingPacket *request);
+        void prepareResponse(const BillingPacket &request);
 
         /**
          * 从数据源中解析数据包
@@ -70,16 +70,13 @@ namespace common {
 
         void appendOpData(const std::string &data);
 
-        void appendOpData(const unsigned char *data, size_t dataSize);
-
-        //写入数据
-        void appendToOutput(std::vector<unsigned char> *outputData) const;
+        void appendOpData(const std::vector<unsigned char> &data);
 
         /**
-         * 打包为buffer,写入用户提供的buff空间,如果空间不足,则抛出异常
-         * @throws common::BillingException
+         * 打包数据,append到data后面
+         * @param data
          */
-        void packData(unsigned char *buff, size_t buffSize) const;
+        void packData(std::vector<unsigned char> &data) const;
     };
 }
 

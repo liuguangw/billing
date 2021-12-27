@@ -3,7 +3,6 @@
 //
 
 #include "packet_data_reader.h"
-#include "fill_buffer.h"
 
 namespace common {
 
@@ -38,21 +37,24 @@ namespace common {
         return targetValue;
     }
 
-    size_t PacketDataReader::readBuffer(unsigned char *buffer, size_t bufferSize) {
-        auto offset = this->it - source->begin();
-        size_t fillCount = services::fillBuffer(source, offset, buffer, bufferSize);
-        this->it += (int) fillCount;
-        return fillCount;
+    void PacketDataReader::readBuffer(std::vector<unsigned char> &buffer, size_t readCount) {
+        auto availableCount = (size_t) (this->source->end() - this->it);
+        size_t nCount = readCount > availableCount ? availableCount : readCount;
+        auto end = this->it + (int) nCount;
+        buffer.reserve(buffer.size() + nCount);
+        buffer.insert(buffer.end(), this->it, end);
+        this->it = end;
     }
 
     void PacketDataReader::skip(int n) {
         this->it += n;
     }
 
-    void PacketDataReader::buildString(std::string &str, unsigned char *buffer, size_t bufferSize) {
-        str.reserve(bufferSize);
-        for (size_t i = 0; i < bufferSize; i++) {
-            str.push_back((char) buffer[i]);
-        }
+    std::string PacketDataReader::buildString(const std::vector<unsigned char> &buffer) {
+        std::string str;
+        str.reserve(buffer.size());
+        const char *pos = (const char *) buffer.data();
+        str.append(pos, pos + buffer.size());
+        return str;
     }
 }

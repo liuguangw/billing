@@ -26,13 +26,13 @@ namespace common {
         unsigned int readUint();
 
         //读取一部分字节
-        size_t readBuffer(unsigned char *buffer, size_t bufferSize);
+        void readBuffer(std::vector<unsigned char> &buffer, size_t readCount);
 
         //跳过一部分字节
         void skip(int n);
 
         //构造字符串
-        static void buildString(std::string &str, unsigned char *buffer, size_t bufferSize);
+        static std::string buildString(const std::vector<unsigned char> &buffer);
     };
 }
 

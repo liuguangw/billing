@@ -13,8 +13,8 @@ namespace bhandler {
     using models::Account;
     using models::RegisterResult;
 
-    void RegisterHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        PacketDataReader packetReader(&request->opData);
+    void RegisterHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        PacketDataReader packetReader(&request.opData);
         //分配空间:用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
@@ -66,10 +66,10 @@ namespace bhandler {
            << registerResultText;
         this->handlerResource->logger()->infoLn(&ss);
         //
-        response->opData.reserve(usernameLength + 2);
-        response->appendOpData(usernameLength);
-        response->appendOpData(usernameBuffer, usernameLength);
-        response->appendOpData(registerResultCode);
+        response.opData.reserve(usernameLength + 2);
+        response.appendOpData(usernameLength);
+        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(registerResultCode);
         //释放分配的空间
         delete[] usernameBuffer;
         delete[] superPasswordBuffer;

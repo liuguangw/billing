@@ -27,7 +27,7 @@ namespace bhandler {
             return common::PACKET_TYPE_CONVERTPOINT;
         }
 
-        void loadResponse(const BillingPacket *request, BillingPacket *response) override;
+        void loadResponse(const BillingPacket &request, BillingPacket &response) override;
     };
 }
 

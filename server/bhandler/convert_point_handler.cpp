@@ -14,8 +14,8 @@ namespace bhandler {
     using common::BillingException;
     using models::Account;
 
-    void ConvertPointHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        PacketDataReader packetReader(&request->opData);
+    void ConvertPointHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        PacketDataReader packetReader(&request.opData);
         //分配空间:用户名
         auto tmpLength = packetReader.readByte();
         auto usernameLength = tmpLength;
@@ -105,23 +105,23 @@ namespace bhandler {
            << ": " << convertResultText;
         logger->infoLn(&ss);
         // 数据包组合
-        response->opData.reserve(1 + usernameLength + orderIdLength + 1 + 4 + 2 + 4 + 2);
-        response->appendOpData(usernameLength);
-        response->appendOpData(usernameBuffer, usernameLength);
-        response->appendOpData(orderIDBytes, orderIdLength);
-        response->appendOpData(convertResult);
+        response.opData.reserve(1 + usernameLength + orderIdLength + 1 + 4 + 2 + 4 + 2);
+        response.appendOpData(usernameLength);
+        response.appendOpData(usernameBuffer, usernameLength);
+        response.appendOpData(orderIDBytes, orderIdLength);
+        response.appendOpData(convertResult);
         //写入剩余点数:u4(此值不会被用到,服务端以购买的数量来进行计算)
-        response->appendOpData(leftPoint * 1000);
+        response.appendOpData(leftPoint * 1000);
         //mGoodsTypeNum:u2
-        response->appendOpData(mGoodsTypeNum);
+        response.appendOpData(mGoodsTypeNum);
         // 写入mGoodsType:u4
-        response->appendOpData(mGoodsType);
+        response.appendOpData(mGoodsType);
         //写入mGoodsNumber(实际购买的数量):u2
         mGoodsNumber = 0;
         if (convertResult == convertSuccess) {
             mGoodsNumber = (unsigned short) (realPoint & 0xFFFF);
         }
-        response->appendOpData(mGoodsNumber);
+        response.appendOpData(mGoodsNumber);
         //释放分配的空间
         delete[] usernameBuffer;
         delete[] loginIPBuffer;

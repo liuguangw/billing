@@ -6,7 +6,7 @@
 
 namespace bhandler {
 
-    void ConnectHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        response->appendOpData((unsigned short) 0x2000);
+    void ConnectHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        response.appendOpData((unsigned short) 0x2000);
     }
 }

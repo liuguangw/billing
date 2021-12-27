@@ -6,7 +6,7 @@
 
 namespace bhandler {
 
-    void KickHandler::loadResponse(const BillingPacket *request, BillingPacket *response) {
-        response->appendOpData(common::PACKET_RESULT_SUCCESS);
+    void KickHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
+        response.appendOpData(common::PACKET_RESULT_SUCCESS);
     }
 }

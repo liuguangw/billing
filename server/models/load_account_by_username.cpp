@@ -7,7 +7,7 @@
 
 namespace models {
 
-    void loadAccountByUsername(DatabaseConnection *dbConn, const char *username, Account *account, bool *exists) {
+    bool loadAccountByUsername(DatabaseConnection *dbConn, const char *username, Account &account) {
         using common::BillingException;
 
         auto mysql = dbConn->getMysql();
@@ -57,7 +57,7 @@ namespace models {
         my_bool error[fieldCount];
         int i = 0;
         bindr[i].buffer_type = MYSQL_TYPE_LONG;
-        bindr[i].buffer = &account->ID;
+        bindr[i].buffer = &account.ID;
         bindr[i].is_null = &is_null[i];
         bindr[i].length = &length[i];
         bindr[i].error = &error[i];
@@ -105,7 +105,7 @@ namespace models {
         bindr[i].error = &error[i];
         i++;
         bindr[i].buffer_type = MYSQL_TYPE_LONG;
-        bindr[i].buffer = &account->Point;
+        bindr[i].buffer = &account.Point;
         bindr[i].is_null = &is_null[i];
         bindr[i].length = &length[i];
         bindr[i].error = &error[i];
@@ -117,16 +117,15 @@ namespace models {
             throw BillingException("mysql_stmt_store_result failed", dbConn->lastError());
         }
         int fetchResult = mysql_stmt_fetch(stmt);
+        bool exists = false;
         if (fetchResult == 0) {
-            account->Name = nameBuffer;
-            account->Password = passwordBuffer;
-            account->Answer = answerBuffer;
-            account->Email = emailBuffer;
-            account->IDCard = idCardBuffer;
-            *exists = true;
-        } else if (fetchResult == MYSQL_NO_DATA) {
-            *exists = false;
-        } else {
+            account.Name = nameBuffer;
+            account.Password = passwordBuffer;
+            account.Answer = answerBuffer;
+            account.Email = emailBuffer;
+            account.IDCard = idCardBuffer;
+            exists = true;
+        } else if (fetchResult != MYSQL_NO_DATA) {
             throw BillingException("mysql_stmt_fetch failed", dbConn->lastError());
         }
         if (mysql_stmt_free_result(stmt) != 0) {
@@ -135,5 +134,6 @@ namespace models {
         if (mysql_stmt_close(stmt) != 0) {
             throw BillingException("mysql_stmt_close failed", dbConn->lastError());
         }
+        return exists;
     }
 }

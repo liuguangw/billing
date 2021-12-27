@@ -13,6 +13,38 @@
 
 namespace services {
     class HandlerResource {
+
+    public:
+        const common::ServerConfig &config() {
+            return this->mServerConfig;
+        }
+
+        Logger &logger() {
+            return this->mLogger;
+        }
+
+        DatabaseConnection *DbConn() {
+            return this->mDatabaseConnection;
+        }
+
+        std::map<std::string, common::ClientInfo> &loginUsers() {
+            return this->mLoginUsers;
+        }
+
+        std::map<std::string, common::ClientInfo> &onlineUsers() {
+            return this->mOnlineUsers;
+        }
+
+        std::map<std::string, unsigned int> &macCounters() {
+            return this->mMacCounters;
+        }
+
+        void initResource(const char *configFilePath, const char *logFilePath);
+
+        void initDatabase();
+
+        ~HandlerResource();
+
     private:
         common::ServerConfig mServerConfig;
         Logger mLogger;
@@ -24,37 +56,6 @@ namespace services {
         void initConfig(const char *configFilePath);
 
         void initLogger(const char *logFilePath);
-
-    public:
-        common::ServerConfig *config() {
-            return &this->mServerConfig;
-        }
-
-        Logger *logger() {
-            return &this->mLogger;
-        }
-
-        DatabaseConnection *DbConn() {
-            return this->mDatabaseConnection;
-        }
-
-        std::map<std::string, common::ClientInfo> *loginUsers() {
-            return &this->mLoginUsers;
-        }
-
-        std::map<std::string, common::ClientInfo> *onlineUsers() {
-            return &this->mOnlineUsers;
-        }
-
-        std::map<std::string, unsigned int> *macCounters() {
-            return &this->mMacCounters;
-        }
-
-        void initResource(const char *configFilePath, const char *logFilePath);
-
-        void initDatabase();
-
-        ~HandlerResource();
     };
 }
 

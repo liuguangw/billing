@@ -8,9 +8,9 @@
 #include "../common/build_info.h"
 
 namespace services {
-    void showVersionInfo(Logger *logger) {
+    void showVersionInfo(Logger &logger) {
         using namespace common;
-        logger->infoLn("project url: https://github.com/liuguangw/billing");
+        logger.infoLn("project url: https://github.com/liuguangw/billing");
         std::stringstream ss;
         char gitHash[8];
         strncpy(gitHash, BUILD_GIT_HASH, 7);
@@ -19,12 +19,12 @@ namespace services {
            << ", git-hash: " << gitHash
            << ", compiler-type: " << BUILD_COMPILER << "(" << BUILD_COMPILER_VERSION << ")"
            << ", build-time: " << BUILD_TIME;
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
     }
 
-    void showBuilderInfo(Logger *logger) {
+    void showBuilderInfo(Logger &logger) {
         std::stringstream ss;
         ss << "build from " << common::BUILD_MACHINE;
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
     }
 }

@@ -8,7 +8,6 @@
 
 #include <map>
 #include <vector>
-#include "../common/io_status.h"
 #include "../common/packet_handler.h"
 #include "logger.h"
 #include "handler_resource.h"
@@ -17,7 +16,7 @@ namespace services {
     class TcpConnection {
     public:
 
-        explicit TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource *hResource);
+        explicit TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource &hResource);
 
         ~TcpConnection();
 
@@ -28,6 +27,16 @@ namespace services {
          * @return 操作成功时返回true
          */
         bool processConn(bool readAble, bool writeAble);
+
+    private:
+        // socket连接
+        int connFd;
+        std::string ipAddress;
+        unsigned short port;
+        HandlerResource &handlerResource;
+        std::vector<unsigned char> inputData;
+        std::vector<unsigned char> outputData;
+        std::map<unsigned char, common::PacketHandler *> packetHandlers;
 
         /**
          * 处理读取到的数据
@@ -41,16 +50,6 @@ namespace services {
          * @return 操作成功时返回true
          */
         bool processSendOutputData();
-
-    private:
-        // socket连接
-        int connFd;
-        std::string ipAddress;
-        unsigned short port;
-        HandlerResource *handlerResource;
-        std::vector<unsigned char> inputData;
-        std::vector<unsigned char> outputData;
-        std::map<unsigned char, common::PacketHandler *> packetHandlers;
 
         //添加handler
         void addHandler(common::PacketHandler *handler);

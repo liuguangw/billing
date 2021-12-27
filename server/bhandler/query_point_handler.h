@@ -16,9 +16,9 @@ namespace bhandler {
 
     class QueryPointHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit QueryPointHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit QueryPointHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

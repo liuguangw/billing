@@ -11,7 +11,7 @@ namespace bhandler {
     using common::PacketDataReader;
 
     void CostLogHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        PacketDataReader packetReader(&request.opData);
+        PacketDataReader packetReader(request.opData);
         std::vector<unsigned char> mSerialKeyBuffer, usernameBuffer, charNameBuffer, loginIPBuffer;
         const unsigned int mSerialKeyLength = 21;
         packetReader.readBuffer(mSerialKeyBuffer, mSerialKeyLength);
@@ -38,8 +38,8 @@ namespace bhandler {
                 .IP=loginIP,
                 .CharName =  charName
         };
-        services::markOnline(this->handlerResource->loginUsers(), this->handlerResource->onlineUsers(),
-                             this->handlerResource->macCounters(), username.c_str(), clientInfo);
+        services::markOnline(this->handlerResource.loginUsers(), this->handlerResource.onlineUsers(),
+                             this->handlerResource.macCounters(), username.c_str(), clientInfo);
         //
         response.opData.reserve(mSerialKeyLength + 1);
         response.appendOpData(mSerialKeyBuffer);

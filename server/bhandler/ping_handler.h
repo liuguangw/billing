@@ -15,10 +15,10 @@ namespace bhandler {
 
     class PingHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
         unsigned short currentPlayerCount = 0;
     public:
-        explicit PingHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit PingHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

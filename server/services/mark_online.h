@@ -12,8 +12,8 @@ namespace services {
     using common::ClientInfo;
     using std::string;
 
-    void markOnline(std::map<string, ClientInfo> *mLoginUsers, std::map<string, ClientInfo> *mOnlineUsers,
-                    std::map<string, unsigned int> *mMacCounters,
+    void markOnline(std::map<string, ClientInfo> &mLoginUsers, std::map<string, ClientInfo> &mOnlineUsers,
+                    std::map<string, unsigned int> &mMacCounters,
                     const char *username, ClientInfo clientInfo);
 }
 

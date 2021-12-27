@@ -5,42 +5,44 @@
 #include "../common/billing_exception.h"
 
 namespace models {
-    void checkLogin(LoginResult *loginResult, DatabaseConnection *dbConn,
-                    std::map<std::string, common::ClientInfo> *onlineUsers, const char *username,
-                    const char *password) {
+    LoginResult checkLogin(DatabaseConnection *dbConn, std::map<string, common::ClientInfo> &onlineUsers,
+                           const char *username, const char *password) {
         using common::BillingException;
+        LoginResult loginResult{
+                .loginError=LoginError::LoginNoError,
+                .message="success"
+        };
         Account account{};
         bool exists = false;
         try {
-            loadAccountByUsername(dbConn, username, &account, &exists);
+            exists = loadAccountByUsername(dbConn, username, account);
         } catch (BillingException &ex) {
-            loginResult->loginError = LoginError::LoginOtherError;
-            loginResult->message = ex.what();
-            return;
+            loginResult.loginError = LoginError::LoginOtherError;
+            loginResult.message = ex.what();
+            return loginResult;
         }
         if (!exists) {
-            loginResult->loginError = LoginError::LoginUserNotFound;
-            loginResult->message = "login user not found";
-            return;
+            loginResult.loginError = LoginError::LoginUserNotFound;
+            loginResult.message = "login user not found";
+            return loginResult;
         }
         if (account.Password != password) {
-            loginResult->loginError = LoginError::LoginInvalidPassword;
-            loginResult->message = "invalid password";
-            return;
+            loginResult.loginError = LoginError::LoginInvalidPassword;
+            loginResult.message = "invalid password";
+            return loginResult;
         }
         if (account.IDCard == "1") {
-            loginResult->loginError = LoginError::LoginAccountLocked;
-            loginResult->message = "account locked";
-            return;
+            loginResult.loginError = LoginError::LoginAccountLocked;
+            loginResult.message = "account locked";
+            return loginResult;
         }
         //判断用户是否在线
-        auto it = onlineUsers->find(username);
-        if (it != onlineUsers->end()) {
-            loginResult->loginError = LoginError::LoginAccountOnline;
-            loginResult->message = "account role is online";
-            return;
+        auto it = onlineUsers.find(username);
+        if (it != onlineUsers.end()) {
+            loginResult.loginError = LoginError::LoginAccountOnline;
+            loginResult.message = "account role is online";
+            return loginResult;
         }
-        loginResult->loginError = LoginError::LoginNoError;
-        loginResult->message = "success";
+        return loginResult;
     }
 }

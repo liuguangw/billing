@@ -10,8 +10,8 @@
 namespace cmd {
     int runVersionCommand() {
         services::Logger logger;
-        services::showVersionInfo(&logger);
-        services::showBuilderInfo(&logger);
+        services::showVersionInfo(logger);
+        services::showBuilderInfo(logger);
         return EXIT_SUCCESS;
     }
 }

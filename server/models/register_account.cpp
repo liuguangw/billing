@@ -8,50 +8,53 @@
 #include "../common/billing_exception.h"
 
 namespace models {
-    void registerAccount(RegisterResult *registerResult, DatabaseConnection *dbConn, const Account *account) {
+    RegisterResult registerAccount(DatabaseConnection *dbConn, const Account &account) {
         using common::BillingException;
+        RegisterResult registerResult{
+                .hasError=false,
+                .message="success"
+        };
         Account tmpAccount{};
         bool exists = false;
         try {
-            loadAccountByUsername(dbConn, account->Name.c_str(), &tmpAccount, &exists);
+            exists = loadAccountByUsername(dbConn, account.Name.c_str(), tmpAccount);
         } catch (BillingException &ex) {
-            registerResult->hasError = true;
-            registerResult->message = ex.what();
-            return;
+            registerResult.hasError = true;
+            registerResult.message = ex.what();
+            return registerResult;
         }
         // 要注册的用户已存在
         if (exists) {
-            registerResult->hasError = true;
+            registerResult.hasError = true;
             std::stringstream ss;
-            ss << "user " << account->Name << " already exists";
-            registerResult->message = ss.str();
-            return;
+            ss << "user " << account.Name << " already exists";
+            registerResult.message = ss.str();
+            return registerResult;
         }
         // 邮箱不能为空
-        if (account->Email.empty()) {
-            registerResult->hasError = true;
-            registerResult->message = "email can't be empty";
-            return;
+        if (account.Email.empty()) {
+            registerResult.hasError = true;
+            registerResult.message = "email can't be empty";
+            return registerResult;
         }
         //不允许默认的邮箱
-        if (account->Email == "1@1.com") {
-            registerResult->hasError = true;
-            registerResult->message = "email 1@1.com is not allowed";
-            return;
+        if (account.Email == "1@1.com") {
+            registerResult.hasError = true;
+            registerResult.message = "email 1@1.com is not allowed";
+            return registerResult;
         }
         //插入
         try {
             doInsertAccount(dbConn, account);
         } catch (BillingException &ex) {
-            registerResult->hasError = true;
-            registerResult->message = ex.what();
-            return;
+            registerResult.hasError = true;
+            registerResult.message = ex.what();
+            return registerResult;
         }
-        registerResult->hasError = false;
-        registerResult->message = "success";
+        return registerResult;
     }
 
-    void doInsertAccount(DatabaseConnection *dbConn, const Account *account) {
+    void doInsertAccount(DatabaseConnection *dbConn, const Account &account) {
         using common::BillingException;
 
         auto mysql = dbConn->getMysql();
@@ -71,30 +74,30 @@ namespace models {
         memset(isNullArr, 0, sizeof(isNullArr));
         memset(lengthArr, 0, sizeof(lengthArr));
         unsigned char offset = 0;
-        lengthArr[offset] = account->Name.length();
+        lengthArr[offset] = account.Name.length();
         bindArr[offset].buffer_type = MYSQL_TYPE_STRING;
-        bindArr[offset].buffer = (void *) account->Name.c_str();
+        bindArr[offset].buffer = (void *) account.Name.c_str();
         bindArr[offset].buffer_length = lengthArr[offset] + 1;
         bindArr[offset].is_null = &isNullArr[offset];
         bindArr[offset].length = &lengthArr[offset];
         offset++;
-        lengthArr[offset] = account->Password.length();
+        lengthArr[offset] = account.Password.length();
         bindArr[offset].buffer_type = MYSQL_TYPE_STRING;
-        bindArr[offset].buffer = (void *) account->Password.c_str();
+        bindArr[offset].buffer = (void *) account.Password.c_str();
         bindArr[offset].buffer_length = lengthArr[offset] + 1;
         bindArr[offset].is_null = &isNullArr[offset];
         bindArr[offset].length = &lengthArr[offset];
         offset++;
-        lengthArr[offset] = account->Question.length();
+        lengthArr[offset] = account.Question.length();
         bindArr[offset].buffer_type = MYSQL_TYPE_STRING;
-        bindArr[offset].buffer = (void *) account->Question.c_str();
+        bindArr[offset].buffer = (void *) account.Question.c_str();
         bindArr[offset].buffer_length = lengthArr[offset] + 1;
         bindArr[offset].is_null = &isNullArr[offset];
         bindArr[offset].length = &lengthArr[offset];
         offset++;
-        lengthArr[offset] = account->Email.length();
+        lengthArr[offset] = account.Email.length();
         bindArr[offset].buffer_type = MYSQL_TYPE_STRING;
-        bindArr[offset].buffer = (void *) account->Email.c_str();
+        bindArr[offset].buffer = (void *) account.Email.c_str();
         bindArr[offset].buffer_length = lengthArr[offset] + 1;
         bindArr[offset].is_null = &isNullArr[offset];
         bindArr[offset].length = &lengthArr[offset];

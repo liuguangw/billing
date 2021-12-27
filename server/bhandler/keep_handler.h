@@ -15,9 +15,9 @@ namespace bhandler {
 
     class KeepHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit KeepHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit KeepHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

@@ -16,9 +16,9 @@ namespace bhandler {
 
     class RegisterHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit RegisterHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit RegisterHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

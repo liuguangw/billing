@@ -10,11 +10,8 @@
 
 namespace common {
     class PacketDataReader {
-    private:
-        std::vector<unsigned char>::const_iterator it;
-        const std::vector<unsigned char> *source;
     public:
-        explicit PacketDataReader(const std::vector<unsigned char> *opData);
+        explicit PacketDataReader(const std::vector<unsigned char> &opData);
 
         //读取1个字节
         unsigned char readByte();
@@ -33,6 +30,10 @@ namespace common {
 
         //构造字符串
         static std::string buildString(const std::vector<unsigned char> &buffer);
+
+    private:
+        std::vector<unsigned char>::const_iterator it;
+        const std::vector<unsigned char> &source;
     };
 }
 

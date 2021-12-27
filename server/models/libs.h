@@ -20,20 +20,19 @@ namespace models {
      * @param dbConn
      * @param username 用户名
      * @param account 用于写入用户数据
-     * @param exists 用于写入用户是否存在的状态
-     * @return
+     * @return 用户是否存在
      * @throws common::BillingException
      */
-    void loadAccountByUsername(DatabaseConnection *dbConn, const char *username, Account *account, bool *exists);
+    bool loadAccountByUsername(DatabaseConnection *dbConn, const char *username, Account &account);
 
     /**
      * 注册帐号
      * @param registerResult
      * @param dbConn
      * @param account 用户信息
-     * @return
+     * @return 注册结果
      */
-    void registerAccount(RegisterResult *registerResult, DatabaseConnection *dbConn, const Account *account);
+    RegisterResult registerAccount(DatabaseConnection *dbConn, const Account &account);
 
     /**
      * 插入用户记录
@@ -41,7 +40,7 @@ namespace models {
      * @param account
      * @throws common::BillingException
      */
-    void doInsertAccount(DatabaseConnection *dbConn, const Account *account);
+    void doInsertAccount(DatabaseConnection *dbConn, const Account &account);
 
     /**
      * 点数兑换
@@ -58,10 +57,8 @@ namespace models {
      * @param dbConn
      * @param username
      * @param password
-     * @return
      */
-    void checkLogin(LoginResult *loginResult, DatabaseConnection *dbConn,
-                    std::map<std::string, common::ClientInfo> *onlineUsers, const char *username,
-                    const char *password);
+    LoginResult checkLogin(DatabaseConnection *dbConn, std::map<string, common::ClientInfo> &onlineUsers,
+                           const char *username, const char *password);
 }
 #endif //BILLING_LIBS_H

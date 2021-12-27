@@ -15,9 +15,9 @@ namespace bhandler {
 
     class LogoutHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit LogoutHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit LogoutHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

@@ -26,7 +26,7 @@ namespace services {
         this->fileLoaded = true;
         stringstream ss;
         ss << "log file path: " << logFilePath;
-        this->infoLn(&ss);
+        this->infoLn(ss);
     }
 
     void Logger::infoLn(const char *msg) {
@@ -39,8 +39,8 @@ namespace services {
         }
     }
 
-    void Logger::infoLn(const std::stringstream *msg) {
-        this->infoLn(msg->str().c_str());
+    void Logger::infoLn(const std::stringstream &msg) {
+        this->infoLn(msg.str().c_str());
     }
 
     void Logger::errorLn(const char *msg) {
@@ -53,7 +53,7 @@ namespace services {
         }
     }
 
-    void Logger::errorLn(const std::stringstream *msg) {
-        this->errorLn(msg->str().c_str());
+    void Logger::errorLn(const std::stringstream &msg) {
+        this->errorLn(msg.str().c_str());
     }
 }

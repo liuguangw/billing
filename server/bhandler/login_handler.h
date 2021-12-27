@@ -32,16 +32,16 @@ namespace bhandler {
 
     class LoginHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
         bool autoReg;//自动注册
         unsigned int maxClientCount,//最多允许进入的用户数量(0表示无限制)
         pcMaxClientCount; //每台电脑最多允许进入的用户数量(0表示无限制)
     public:
-        explicit LoginHandler(HandlerResource *hResource) : handlerResource(hResource) {
-            auto serverConfig = hResource->config();
-            this->autoReg = serverConfig->AutoReg;
-            this->maxClientCount = serverConfig->MaxClientCount;
-            this->pcMaxClientCount = serverConfig->PcMaxClientCount;
+        explicit LoginHandler(HandlerResource &hResource) : handlerResource(hResource) {
+            auto &serverConfig = hResource.config();
+            this->autoReg = serverConfig.AutoReg;
+            this->maxClientCount = serverConfig.MaxClientCount;
+            this->pcMaxClientCount = serverConfig.PcMaxClientCount;
         }
 
         unsigned char getType() override {

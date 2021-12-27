@@ -15,7 +15,7 @@ namespace bhandler {
     using models::Account;
 
     void ConvertPointHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        PacketDataReader packetReader(&request.opData);
+        PacketDataReader packetReader(request.opData);
         std::vector<unsigned char> usernameBuffer, loginIPBuffer, charNameBuffer, orderIDBuffer;
         //用户名
         auto tmpLength = packetReader.readByte();
@@ -53,16 +53,16 @@ namespace bhandler {
         unsigned int userPoint = 0;
         Account account{};
         bool exists = false;
-        auto dbConn = this->handlerResource->DbConn();
-        auto logger = this->handlerResource->logger();
+        auto dbConn = this->handlerResource.DbConn();
+        auto& logger = this->handlerResource.logger();
         std::stringstream ss;
         try {
-            models::loadAccountByUsername(dbConn, username.c_str(), &account, &exists);
+            exists = models::loadAccountByUsername(dbConn, username.c_str(), account);
         } catch (BillingException &ex) {
             convertResult = convertFailed;
             ss << "get account:" << username << " info failed: " << ex.what();
             convertResultText = ss.str();
-            logger->errorLn(&ss);
+            logger.errorLn(ss);
         }
         if (exists) {
             userPoint = (account.Point < 0) ? 0 : (unsigned int) account.Point;
@@ -89,7 +89,7 @@ namespace bhandler {
             ss.str("");
             ss << "convertFailed: " << ex.what();
             convertResultText = ss.str();
-            logger->errorLn(&ss);
+            logger.errorLn(ss);
         }
         //日志记录
         ss.str("");
@@ -97,7 +97,7 @@ namespace bhandler {
            << "  point total [" << userPoint << "], need point [" << needPoint << "]"
            << ", (" << userPoint << " - " << realPoint << " = " << leftPoint << ")"
            << ": " << convertResultText;
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
         // 数据包组合
         response.opData.reserve(1 + usernameLength + orderIdLength + 1 + 4 + 2 + 4 + 2);
         response.appendOpData(usernameLength);

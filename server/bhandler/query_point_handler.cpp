@@ -16,7 +16,7 @@ namespace bhandler {
     using models::Account;
 
     void QueryPointHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        PacketDataReader packetReader(&request.opData);
+        PacketDataReader packetReader(request.opData);
         std::vector<unsigned char> usernameBuffer, loginIPBuffer, charNameBuffer;
         //用户名
         auto tmpLength = packetReader.readByte();
@@ -35,14 +35,14 @@ namespace bhandler {
         unsigned int userPoint = 0;
         Account account{};
         bool exists = false;
-        auto dbConn = this->handlerResource->DbConn();
-        auto logger = this->handlerResource->logger();
+        auto dbConn = this->handlerResource.DbConn();
+        auto &logger = this->handlerResource.logger();
         std::stringstream ss;
         try {
-            models::loadAccountByUsername(dbConn, username.c_str(), &account, &exists);
+            exists = models::loadAccountByUsername(dbConn, username.c_str(), account);
         } catch (BillingException &ex) {
             ss << "get account:" << username << " info failed: " << ex.what();
-            logger->errorLn(&ss);
+            logger.errorLn(ss);
         }
         if (exists) {
             userPoint = (account.Point < 0) ? 0 : (unsigned int) account.Point;
@@ -51,12 +51,12 @@ namespace bhandler {
         common::ClientInfo clientInfo{
                 .IP=loginIP,
                 .CharName=charName};
-        services::markOnline(this->handlerResource->loginUsers(), this->handlerResource->onlineUsers(),
-                             this->handlerResource->macCounters(), username.c_str(), clientInfo);
+        services::markOnline(this->handlerResource.loginUsers(), this->handlerResource.onlineUsers(),
+                             this->handlerResource.macCounters(), username.c_str(), clientInfo);
         //日志记录
         ss.str("");
         ss << "user [" << username << "] " << charName << " query point (" << userPoint << ") at " << loginIP;
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
         unsigned int pointValue = (userPoint + 1) * 1000;
         response.opData.reserve(usernameLength + 5);
         response.appendOpData(usernameLength);

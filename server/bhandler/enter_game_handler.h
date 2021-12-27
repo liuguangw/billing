@@ -16,9 +16,9 @@ namespace bhandler {
 
     class EnterGameHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit EnterGameHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit EnterGameHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

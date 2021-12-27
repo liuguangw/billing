@@ -12,7 +12,7 @@ namespace bhandler {
     using common::PacketDataReader;
 
     void LogoutHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        PacketDataReader packetReader(&request.opData);
+        PacketDataReader packetReader(request.opData);
         std::vector<unsigned char> usernameBuffer;
         //用户名
         auto tmpLength = packetReader.readByte();
@@ -20,35 +20,35 @@ namespace bhandler {
         packetReader.readBuffer(usernameBuffer, tmpLength);
         string username = PacketDataReader::buildString(usernameBuffer);
         //更新在线状态
-        auto onlineUsers = this->handlerResource->onlineUsers();
-        auto it = onlineUsers->find(username);
-        if (it != onlineUsers->end()) {
-            auto clientInfo = &it->second;
-            auto macMd5 = clientInfo->MacMd5;
+        auto &onlineUsers = this->handlerResource.onlineUsers();
+        auto it = onlineUsers.find(username);
+        if (it != onlineUsers.end()) {
+            auto& clientInfo = it->second;
+            auto& macMd5 = clientInfo.MacMd5;
             if (!macMd5.empty()) {
-                auto macCounters = this->handlerResource->macCounters();
-                auto it1 = macCounters->find(macMd5);
-                if (it1 != macCounters->end()) {
+                auto &macCounters = this->handlerResource.macCounters();
+                auto it1 = macCounters.find(macMd5);
+                if (it1 != macCounters.end()) {
                     //计数器-1
                     unsigned int macCounter = it1->second;
                     if (macCounter > 0) {
                         macCounter--;
                     }
                     if (macCounter > 0) {
-                        macCounters->operator[](it1->first) = macCounter;
+                        macCounters[it1->first] = macCounter;
                     } else {
                         //归0了,直接删除key
-                        macCounters->erase(it1);
+                        macCounters.erase(it1);
                     }
                 }
             }
-            onlineUsers->erase(it);
+            onlineUsers.erase(it);
         }
         //logger
-        auto logger = this->handlerResource->logger();
+        services::Logger &logger = this->handlerResource.logger();
         std::stringstream ss;
         ss << "user [" << username << "] logout game";
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
         //
         response.opData.reserve(usernameLength + 2);
         response.appendOpData(usernameLength);

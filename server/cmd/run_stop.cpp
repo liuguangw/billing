@@ -40,7 +40,7 @@ namespace cmd {
             //todo debug
             std::stringstream ss;
             debug::dumpPacket(ss, "response", &response);
-            logger.infoLn(&ss);
+            logger.infoLn(ss);
         } catch (common::BillingException &ex) {
             logger.errorLn(ex.what());
             return EXIT_FAILURE;

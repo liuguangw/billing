@@ -13,23 +13,22 @@
 #include "io_tools.h"
 
 namespace services {
-    using common::IoStatus;
 
-    TcpConnection::TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource *hResource)
+    TcpConnection::TcpConnection(int fd, const char *ipAddress, unsigned short port, HandlerResource &hResource)
             : connFd(fd), ipAddress(ipAddress), port(port), handlerResource(hResource) {
         this->initPacketHandlers();
-        auto logger = this->handlerResource->logger();
+        auto &logger = this->handlerResource.logger();
         std::stringstream ss;
         ss << "TcpConnection::TcpConnection fd:" << fd;
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
         ss.str("");
         ss << "client " << ipAddress << ":" << port << " connected";
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
     }
 
     TcpConnection::~TcpConnection() {
-        auto logger = this->handlerResource->logger();
-        logger->infoLn("TcpConnection::~TcpConnection");
+        auto &logger = this->handlerResource.logger();
+        logger.infoLn("TcpConnection::~TcpConnection");
         for (auto &pair: this->packetHandlers) {
             delete pair.second;
         }
@@ -37,7 +36,7 @@ namespace services {
         std::stringstream ss;
         ss << "TcpConnection destroy fd:" << this->connFd;
         ss << "(" << this->ipAddress << ":" << this->port << ")";
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
     }
 
 
@@ -72,7 +71,7 @@ namespace services {
 
     bool TcpConnection::processConn(bool readAble, bool writeAble) {
         ssize_t tmpSize;
-        auto logger = this->handlerResource->logger();
+        auto &logger = this->handlerResource.logger();
         //写入上一轮没有成功写入的数据
         if (writeAble && !this->outputData.empty()) {
             if (!this->processSendOutputData()) {
@@ -86,15 +85,15 @@ namespace services {
         if (readAble) {
             const unsigned int buffSize = 1024;
             unsigned char buffer[buffSize];
-            //logger->infoLn("readAll");
+            //logger.infoLn("readAll");
             tmpSize = ioReadAll(this->connFd, this->inputData, buffer, buffSize);
             if (tmpSize < 0) {
                 std::stringstream ss;
                 ss << "read failed: " << strerror(errno);
-                logger->errorLn(&ss);
+                logger.errorLn(ss);
                 return false;
             } else if (tmpSize == 0) {
-                logger->infoLn("client disconnected");
+                logger.infoLn("client disconnected");
                 return false;
             }
         }
@@ -114,7 +113,7 @@ namespace services {
         PacketParseResult parseResult;
         std::map<unsigned char, common::PacketHandler *>::iterator handlerIt;
         common::PacketHandler *handler;
-        auto logger = this->handlerResource->logger();
+        auto &logger = this->handlerResource.logger();
         while (true) {
             parseResult = request.loadFromSource(&this->inputData, parseTotalSize);
             if (parseResult == PacketParseResult::PacketNotFull) {
@@ -123,7 +122,7 @@ namespace services {
             }
             //格式错误
             if (parseResult == PacketParseResult::PacketInvalid) {
-                logger->errorLn("invalid packet");
+                logger.errorLn("invalid packet");
                 return false;
             }
             parseTotalSize += request.fullLength();
@@ -136,10 +135,10 @@ namespace services {
                 std::stringstream ss;
                 ss << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
                    << std::hex << (int) request.opType;
-                logger->errorLn(&ss);
+                logger.errorLn(ss);
                 ss.str("");
                 debug::dumpPacket(ss, "request", &request);
-                logger->infoLn(&ss);
+                logger.infoLn(ss);
                 continue;
             }
             response.prepareResponse(request);
@@ -167,7 +166,7 @@ namespace services {
         if (writeCount < 0) {
             std::stringstream ss;
             ss << "write failed: " << strerror(errno);
-            this->handlerResource->logger()->errorLn(&ss);
+            this->handlerResource.logger().errorLn(ss);
             return false;
         } else if (writeCount > 0) {
             //删除左侧已经发送了的数据

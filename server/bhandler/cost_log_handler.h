@@ -15,9 +15,9 @@ namespace bhandler {
 
     class CostLogHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit CostLogHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit CostLogHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

@@ -11,21 +11,25 @@ namespace services {
     using std::ofstream;
 
     class Logger {
-    private:
-        ofstream logOutStream;
-        bool fileLoaded = false;
     public:
         ~Logger();
+
+        Logger() = default;
+
+        Logger(const Logger &s) = delete;
 
         void initLogger(const char *logFilePath);
 
         void infoLn(const char *msg);
 
-        void infoLn(const std::stringstream *msg);
+        void infoLn(const std::stringstream &msg);
 
         void errorLn(const char *msg);
 
-        void errorLn(const std::stringstream *msg);
+        void errorLn(const std::stringstream &msg);
+    private:
+        ofstream logOutStream;
+        bool fileLoaded = false;
     };
 }
 

@@ -16,7 +16,7 @@ namespace services {
     }
 
     void HandlerResource::initDatabase() {
-        this->mDatabaseConnection = new DatabaseConnection(&this->mServerConfig);
+        this->mDatabaseConnection = new DatabaseConnection(this->mServerConfig);
         this->mDatabaseConnection->connect();
     }
 

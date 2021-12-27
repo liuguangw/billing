@@ -16,6 +16,14 @@
 
 namespace services {
     class Server {
+
+    public:
+        ~Server();
+
+        void initResource(const char *configFilePath, const char *logFilePath);
+
+        int run();
+
     private:
         HandlerResource handlerResource;
         int signalFd = -1, serverSockFd = -1, epollFd = -1;
@@ -36,17 +44,10 @@ namespace services {
         bool allowIpAddress(const char *address);
 
         //接受tcp连接
-        void processAcceptConnEvent(epoll_event *connEvent);
+        void processAcceptConnEvent(epoll_event &connEvent);
 
         //处理tcp连接的事件
-        void processConnEvent(epoll_event *connEvent);
-
-    public:
-        ~Server();
-
-        void initResource(const char *configFilePath, const char *logFilePath);
-
-        int run();
+        void processConnEvent(const epoll_event &connEvent);
     };
 }
 

@@ -10,10 +10,6 @@
 
 namespace services {
     class DatabaseConnection {
-    private:
-        common::ServerConfig *serverConfig;
-        bool reConnect;
-        MYSQL *mysql;
     public:
         /**
          * 构造函数
@@ -23,7 +19,7 @@ namespace services {
          * @param db 数据库名称
          * @param port 端口
          */
-        explicit DatabaseConnection(common::ServerConfig *serverConfig) : serverConfig(serverConfig), reConnect(true) {
+        explicit DatabaseConnection(common::ServerConfig &serverConfig) : serverConfig(serverConfig) {
             mysql = mysql_init(nullptr);
         }
 
@@ -50,6 +46,11 @@ namespace services {
         const char *serverVersion();
 
         MYSQL *getMysql();
+
+    private:
+        common::ServerConfig &serverConfig;
+        bool reConnect = true;
+        MYSQL *mysql;
     };
 }
 

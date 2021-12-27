@@ -14,7 +14,7 @@ namespace bhandler {
     using models::RegisterResult;
 
     void RegisterHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        PacketDataReader packetReader(&request.opData);
+        PacketDataReader packetReader(request.opData);
         std::vector<unsigned char> usernameBuffer, superPasswordBuffer, passwordBuffer, registerIPBuffer, emailBuffer;
         //用户名
         auto tmpLength = packetReader.readByte();
@@ -43,10 +43,9 @@ namespace bhandler {
                 .Password=password,
                 .Question=superPassword,
                 .Email=email};
-        RegisterResult registerResult;
         unsigned char registerResultCode = 0x01;
         string registerResultText = "success";
-        models::registerAccount(&registerResult, this->handlerResource->DbConn(), &account);
+        auto registerResult=models::registerAccount(this->handlerResource.DbConn(), account);
         if (registerResult.hasError) {
             registerResultCode = 0x04;
             registerResultText = registerResult.message;
@@ -55,7 +54,7 @@ namespace bhandler {
         std::stringstream ss;
         ss << "user [" << username << "](" << email << ") try to register from " << registerIP << " : "
            << registerResultText;
-        this->handlerResource->logger()->infoLn(&ss);
+        this->handlerResource.logger().infoLn(ss);
         //
         response.opData.reserve(usernameLength + 2);
         response.appendOpData(usernameLength);

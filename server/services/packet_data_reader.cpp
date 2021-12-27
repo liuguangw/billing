@@ -6,7 +6,7 @@
 
 namespace common {
 
-    PacketDataReader::PacketDataReader(const std::vector<unsigned char> *opData) : it(opData->begin()), source(opData) {
+    PacketDataReader::PacketDataReader(const std::vector<unsigned char> &opData) : it(opData.begin()), source(opData) {
     }
 
     unsigned char PacketDataReader::readByte() {
@@ -38,7 +38,7 @@ namespace common {
     }
 
     void PacketDataReader::readBuffer(std::vector<unsigned char> &buffer, size_t readCount) {
-        auto availableCount = (size_t) (this->source->end() - this->it);
+        auto availableCount = (size_t) (this->source.end() - this->it);
         size_t nCount = readCount > availableCount ? availableCount : readCount;
         auto end = this->it + (int) nCount;
         buffer.reserve(buffer.size() + nCount);

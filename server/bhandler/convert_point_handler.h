@@ -18,9 +18,9 @@ namespace bhandler {
 
     class ConvertPointHandler : public common::PacketHandler {
     private:
-        HandlerResource *handlerResource;
+        HandlerResource &handlerResource;
     public:
-        explicit ConvertPointHandler(HandlerResource *hResource) : handlerResource(hResource) {
+        explicit ConvertPointHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
 
         unsigned char getType() override {

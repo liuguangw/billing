@@ -12,7 +12,7 @@ namespace bhandler {
     using common::PacketDataReader;
 
     void LoginHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        PacketDataReader packetReader(&request.opData);
+        PacketDataReader packetReader(request.opData);
         std::vector<unsigned char> usernameBuffer, passwordBuffer, loginIPBuffer, macMd5Buffer;
         //用户名
         auto tmpLength = packetReader.readByte();
@@ -35,8 +35,7 @@ namespace bhandler {
         string macMd5 = PacketDataReader::buildString(macMd5Buffer);
         //初始化
         unsigned char loginResultCode = loginCodeSuccess;
-        models::LoginResult loginResult;
-        models::checkLogin(&loginResult, this->handlerResource->DbConn(), this->handlerResource->onlineUsers(),
+        auto loginResult = models::checkLogin( this->handlerResource.DbConn(), this->handlerResource.onlineUsers(),
                            username.c_str(), password.c_str());
         string loginResultDescription = loginResult.message;
         switch (loginResult.loginError) {
@@ -66,7 +65,7 @@ namespace bhandler {
 
         //判断连接的用户数是否达到限制
         if (loginResultCode == loginCodeSuccess && this->maxClientCount > 0) {
-            auto currentCount = (unsigned int) this->handlerResource->onlineUsers()->size();
+            auto currentCount = (unsigned int) this->handlerResource.onlineUsers().size();
             if (currentCount >= this->maxClientCount) {
                 loginResultCode = loginCodeOtherError;
                 loginResultDescription = "reach max_client_count limit";
@@ -75,9 +74,9 @@ namespace bhandler {
         //判断此电脑的连接数是否达到限制
         if (loginResultCode == loginCodeSuccess && this->pcMaxClientCount > 0) {
             unsigned int macCounter = 0;
-            auto macCounters = this->handlerResource->macCounters();
-            auto it = macCounters->find(macMd5);
-            if (it != macCounters->end()) {
+            auto& macCounters = this->handlerResource.macCounters();
+            auto it = macCounters.find(macMd5);
+            if (it != macCounters.end()) {
                 macCounter = it->second;
             }
             if (macCounter >= this->pcMaxClientCount) {
@@ -90,15 +89,15 @@ namespace bhandler {
             common::ClientInfo clientInfo{
                     .IP = loginIP,
                     .MacMd5 = macMd5};
-            auto loginUsers = this->handlerResource->loginUsers();
-            loginUsers->operator[](username) = clientInfo;
+            auto& loginUsers = this->handlerResource.loginUsers();
+            loginUsers[username]= clientInfo;
         }
         //logger
-        auto logger = this->handlerResource->logger();
+        auto& logger = this->handlerResource.logger();
         std::stringstream ss;
         ss << "user [" << username << "] try to login from " << loginIP << "(Mac_md5=" << macMd5 << ") : "
            << loginResultDescription;
-        logger->infoLn(&ss);
+        logger.infoLn(ss);
         //
         response.opData.reserve(usernameLength + 2);
         response.appendOpData(usernameLength);

@@ -16,8 +16,6 @@ namespace common {
      * 异常定义
      */
     class BillingException : public exception {
-    private:
-        string message;
     public:
         BillingException(const char *title, const char *message);
 
@@ -26,6 +24,8 @@ namespace common {
         const char *what() const noexcept override {
             return this->message.c_str();
         }
+    private:
+        string message;
     };
 }
 

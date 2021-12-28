@@ -6,7 +6,6 @@
 #include "keep_handler.h"
 #include "../services/packet_data_reader.h"
 #include "../services/mark_online.h"
-#include "../services/logger.h"
 
 namespace bhandler {
     using std::string;

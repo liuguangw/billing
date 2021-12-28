@@ -23,7 +23,6 @@ namespace services {
         using std::stringstream;
         using std::endl;
         this->logOutStream.open(logFilePath, ofstream::out | ofstream::app);
-        this->fileLoaded = true;
         stringstream ss;
         ss << "log file path: " << logFilePath;
         this->infoLn(ss);
@@ -34,7 +33,7 @@ namespace services {
         using std::endl;
 
         cout << colorGreen << "[info]" << colorReset << msg << endl;
-        if (this->fileLoaded) {
+        if (this->logOutStream.is_open()) {
             this->logOutStream << "[info]" << msg << endl;
         }
     }
@@ -48,7 +47,7 @@ namespace services {
         using std::endl;
 
         cerr << colorRed << "[error]" << colorReset << msg << endl;
-        if (this->fileLoaded) {
+        if (this->logOutStream.is_open()) {
             this->logOutStream << "[error]" << msg << endl;
         }
     }

@@ -14,9 +14,6 @@ namespace bhandler {
     using services::HandlerResource;
 
     class PingHandler : public common::PacketHandler {
-    private:
-        HandlerResource &handlerResource;
-        unsigned short currentPlayerCount = 0;
     public:
         explicit PingHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
@@ -26,6 +23,10 @@ namespace bhandler {
         }
 
         void loadResponse(const BillingPacket &request, BillingPacket &response) override;
+
+    private:
+        HandlerResource &handlerResource;
+        unsigned short currentPlayerCount = 0;
     };
 }
 

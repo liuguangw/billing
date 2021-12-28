@@ -14,8 +14,6 @@ namespace bhandler {
     using services::HandlerResource;
 
     class CostLogHandler : public common::PacketHandler {
-    private:
-        HandlerResource &handlerResource;
     public:
         explicit CostLogHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
@@ -25,6 +23,9 @@ namespace bhandler {
         }
 
         void loadResponse(const BillingPacket &request, BillingPacket &response) override;
+
+    private:
+        HandlerResource &handlerResource;
     };
 }
 

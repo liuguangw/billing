@@ -151,6 +151,8 @@ namespace services {
             }
             //判断是否应该停止
             if (this->handlerResource.markStop()) {
+                //收到停止命令了
+                this->handlerResource.logger().infoLn("get stop command");
                 break;
             }
         }

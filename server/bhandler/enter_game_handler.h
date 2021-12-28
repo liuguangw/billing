@@ -15,8 +15,6 @@ namespace bhandler {
     using services::HandlerResource;
 
     class EnterGameHandler : public common::PacketHandler {
-    private:
-        HandlerResource &handlerResource;
     public:
         explicit EnterGameHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
@@ -26,6 +24,9 @@ namespace bhandler {
         }
 
         void loadResponse(const BillingPacket &request, BillingPacket &response) override;
+
+    private:
+        HandlerResource &handlerResource;
     };
 }
 

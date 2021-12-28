@@ -9,7 +9,7 @@
 namespace bhandler {
 
     void PingHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
-        common::PacketDataReader packetReader(request.opData);
+        services::PacketDataReader packetReader(request.opData);
         auto zoneID = packetReader.readUShort();
         auto worldID = packetReader.readUShort();
         auto playerCount = packetReader.readUShort();

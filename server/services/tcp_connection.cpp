@@ -19,24 +19,24 @@ namespace services {
         this->initPacketHandlers();
         auto &logger = this->handlerResource.logger();
         std::stringstream ss;
-        ss << "TcpConnection::TcpConnection fd:" << fd;
+        /*ss << "TcpConnection::TcpConnection fd:" << fd;
         logger.infoLn(ss);
-        ss.str("");
+        ss.str("");*/
         ss << "client " << ipAddress << ":" << port << " connected";
         logger.infoLn(ss);
     }
 
     TcpConnection::~TcpConnection() {
         auto &logger = this->handlerResource.logger();
-        logger.infoLn("TcpConnection::~TcpConnection");
+        //logger.infoLn("TcpConnection::~TcpConnection");
         for (auto &pair: this->packetHandlers) {
             delete pair.second;
         }
         close(this->connFd);
-        std::stringstream ss;
-        ss << "TcpConnection destroy fd:" << this->connFd;
+        /*std::stringstream ss;
+        ss << "close tcp Connection fd=" << this->connFd;
         ss << "(" << this->ipAddress << ":" << this->port << ")";
-        logger.infoLn(ss);
+        logger.infoLn(ss);*/
     }
 
 
@@ -91,11 +91,13 @@ namespace services {
             tmpSize = ioReadAll(this->connFd, this->inputData, buffer, buffSize);
             if (tmpSize < 0) {
                 std::stringstream ss;
-                ss << "read failed: " << strerror(errno);
+                ss << "read failed(" << this->ipAddress << ":" << this->port << "): " << strerror(errno);
                 logger.errorLn(ss);
                 return false;
             } else if (tmpSize == 0) {
-                logger.infoLn("client disconnected");
+                std::stringstream ss;
+                ss << "client " << this->ipAddress << ":" << this->port << " disconnected";
+                logger.infoLn(ss);
                 return false;
             }
         }
@@ -117,7 +119,7 @@ namespace services {
         common::PacketHandler *handler;
         auto &logger = this->handlerResource.logger();
         while (true) {
-            parseResult = request.loadFromSource(&this->inputData, parseTotalSize);
+            parseResult = request.loadFromSource(this->inputData, parseTotalSize);
             if (parseResult == PacketParseResult::PacketNotFull) {
                 //数据包结构不完整,跳出while解析循环
                 break;
@@ -135,6 +137,7 @@ namespace services {
             } else {
                 //记录无法处理的packet
                 std::stringstream ss;
+                ss << "(" << this->ipAddress << ":" << this->port << ")";
                 ss << "unknown packet opType: 0x" << std::setfill('0') << std::setw(2) << std::right
                    << std::hex << (int) request.opType;
                 logger.errorLn(ss);
@@ -167,7 +170,7 @@ namespace services {
         ssize_t writeCount = ioWriteBuffer(this->connFd, this->outputData.data(), this->outputData.size());
         if (writeCount < 0) {
             std::stringstream ss;
-            ss << "write failed: " << strerror(errno);
+            ss << "write failed(" << this->ipAddress << ":" << this->port << "): " << strerror(errno);
             this->handlerResource.logger().errorLn(ss);
             return false;
         } else if (writeCount > 0) {

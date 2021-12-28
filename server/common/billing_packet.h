@@ -56,7 +56,7 @@ namespace common {
          * @param offset 开始的位置
          * @return 解析结果
          */
-        PacketParseResult loadFromSource(const std::vector<unsigned char> *source, size_t offset);
+        PacketParseResult loadFromSource(const std::vector<unsigned char> &source, size_t offset);
 
         size_t fullLength() const {
             return this->opData.size() + PACKET_MIN_SIZE;

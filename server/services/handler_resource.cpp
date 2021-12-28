@@ -3,12 +3,11 @@
 //
 
 #include "handler_resource.h"
-#include "load_server_config.h"
 
 namespace services {
 
     void HandlerResource::initConfig(const char *configFilePath) {
-        loadServerConfig(configFilePath, &this->mServerConfig);
+        this->mServerConfig.initConfig(configFilePath);
     }
 
     void HandlerResource::initLogger(const char *logFilePath) {

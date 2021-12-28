@@ -127,7 +127,7 @@ namespace services {
                     } else if (tmpSize < 0) {
                         throw common::BillingException("read failed", errno);
                     }
-                    auto packetParseResult = responsePacket.loadFromSource(&responseData, 0);
+                    auto packetParseResult = responsePacket.loadFromSource(responseData, 0);
                     if (packetParseResult == common::PacketParseResult::PacketOk) {
                         return;
                     } else if (packetParseResult == common::PacketParseResult::PacketInvalid) {

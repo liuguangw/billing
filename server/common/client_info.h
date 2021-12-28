@@ -6,12 +6,24 @@
 #define BILLING_CLIENT_INFO_H
 
 #include <string>
+#include <ostream>
 
 namespace common {
     struct ClientInfo {
-        std::string IP,       //客户端IP
-        MacMd5,   //客户端MAC地址MD5
-        CharName; //角色名称
+        //客户端IP
+        std::string IP,
+        //客户端MAC地址MD5
+        MacMd5,
+        //角色名称
+        CharName;
+
+        friend std::ostream &operator<<(std::ostream &stream, const ClientInfo &clientInfo) {
+            stream << "{ip=" << clientInfo.IP
+                   << ", mac_md5=" << clientInfo.MacMd5
+                   << ", char_name=" << clientInfo.CharName
+                   << "}";
+            return stream;
+        }
     };
 }
 

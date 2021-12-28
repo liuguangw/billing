@@ -30,7 +30,6 @@ namespace services {
 
     private:
         ofstream logOutStream;
-        bool fileLoaded = false;
     };
 }
 

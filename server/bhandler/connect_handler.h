@@ -12,7 +12,7 @@ namespace bhandler {
     using common::BillingPacket;
 
     class ConnectHandler : public common::PacketHandler {
-
+    public:
         unsigned char getType() override {
             return common::PACKET_TYPE_CONNECT;
         }

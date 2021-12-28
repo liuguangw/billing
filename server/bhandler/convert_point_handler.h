@@ -17,8 +17,6 @@ namespace bhandler {
     static const unsigned char convertFailed = 1; //兑换失败
 
     class ConvertPointHandler : public common::PacketHandler {
-    private:
-        HandlerResource &handlerResource;
     public:
         explicit ConvertPointHandler(HandlerResource &hResource) : handlerResource(hResource) {
         }
@@ -28,6 +26,9 @@ namespace bhandler {
         }
 
         void loadResponse(const BillingPacket &request, BillingPacket &response) override;
+
+    private:
+        HandlerResource &handlerResource;
     };
 }
 

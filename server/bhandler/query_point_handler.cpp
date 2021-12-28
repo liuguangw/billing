@@ -11,7 +11,7 @@
 
 namespace bhandler {
     using std::string;
-    using common::PacketDataReader;
+    using services::PacketDataReader;
     using common::BillingException;
     using models::Account;
 

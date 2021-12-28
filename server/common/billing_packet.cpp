@@ -14,12 +14,12 @@ namespace common {
         this->opData.clear();
     }
 
-    PacketParseResult BillingPacket::loadFromSource(const std::vector<unsigned char> *source, size_t offset) {
-        auto sourceSize = source->size() - offset;
+    PacketParseResult BillingPacket::loadFromSource(const std::vector<unsigned char> &source, size_t offset) {
+        auto sourceSize = source.size() - offset;
         if (sourceSize < PACKET_MIN_SIZE) {
             return PacketParseResult::PacketNotFull;
         }
-        auto it = source->begin() + (int) offset;
+        auto it = source.begin() + (int) offset;
         //头部检测
         if (*it != MASK0) {
             return PacketParseResult::PacketInvalid;

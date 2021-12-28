@@ -31,11 +31,6 @@ namespace bhandler {
     static const unsigned char loginCodeShowRegister = 0x09;
 
     class LoginHandler : public common::PacketHandler {
-    private:
-        HandlerResource &handlerResource;
-        bool autoReg;//自动注册
-        unsigned int maxClientCount,//最多允许进入的用户数量(0表示无限制)
-        pcMaxClientCount; //每台电脑最多允许进入的用户数量(0表示无限制)
     public:
         explicit LoginHandler(HandlerResource &hResource) : handlerResource(hResource) {
             auto &serverConfig = hResource.config();
@@ -49,6 +44,12 @@ namespace bhandler {
         }
 
         void loadResponse(const BillingPacket &request, BillingPacket &response) override;
+
+    private:
+        HandlerResource &handlerResource;
+        bool autoReg;//自动注册
+        unsigned int maxClientCount,//最多允许进入的用户数量(0表示无限制)
+        pcMaxClientCount; //每台电脑最多允许进入的用户数量(0表示无限制)
     };
 }
 

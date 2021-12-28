@@ -4,7 +4,7 @@
 
 #include "packet_data_reader.h"
 
-namespace common {
+namespace services {
 
     PacketDataReader::PacketDataReader(const std::vector<unsigned char> &opData) : it(opData.begin()), source(opData) {
     }
@@ -53,8 +53,9 @@ namespace common {
     std::string PacketDataReader::buildString(const std::vector<unsigned char> &buffer) {
         std::string str;
         str.reserve(buffer.size());
-        const char *pos = (const char *) buffer.data();
-        str.append(pos, pos + buffer.size());
+        for (auto &it: buffer) {
+            str.push_back((char) it);
+        }
         return str;
     }
 }

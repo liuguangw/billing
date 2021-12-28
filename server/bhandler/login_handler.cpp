@@ -9,7 +9,7 @@
 
 namespace bhandler {
     using std::string;
-    using common::PacketDataReader;
+    using services::PacketDataReader;
 
     void LoginHandler::loadResponse(const BillingPacket &request, BillingPacket &response) {
         PacketDataReader packetReader(request.opData);

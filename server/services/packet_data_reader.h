@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 
-namespace common {
+namespace services {
     class PacketDataReader {
     public:
         explicit PacketDataReader(const std::vector<unsigned char> &opData);

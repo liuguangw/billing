@@ -2,10 +2,16 @@
 
 osReleasePath=/etc/os-release
 issuePath=/etc/issue.net
+machineName=
+
 if [ -f "${osReleasePath}" ]; then
-  . ${osReleasePath} && echo "$PRETTY_NAME"
+  machineName=$(. ${osReleasePath} && echo "${PRETTY_NAME}")
 elif [ -f "${issuePath}" ]; then
-  cat ${issuePath}
+  machineName=$(cat ${issuePath})
 else
-  uname -s
+  machineName=$(uname -s)
 fi
+if [ -n "${GITHUB_ACTIONS}" ]; then
+ machineName="${machineName} (GitHub Actions)"
+fi
+echo "${machineName}"

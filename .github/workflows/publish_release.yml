@@ -1,0 +1,38 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          ./build.sh
+          cd cmake-build-billing
+          mkdir -p billing-release-static
+          cp billing config.yaml ./billing-release-static/
+          tar -zcf billing-release-static.tar.gz billing-release-static
+          cd ..
+          ./build.sh shared
+          cd cmake-build-billing
+          mkdir -p billing-release-shared
+          cp billing config.yaml ./billing-release-shared/
+          tar -zcf billing-release-shared.tar.gz billing-release-shared
+          cd ..
+          ls -alh
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+         files: billing-release-*.tar.gz
+         draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

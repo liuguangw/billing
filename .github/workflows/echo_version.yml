@@ -1,0 +1,26 @@
+name: echo version
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: ./build.sh shared
+
+      - name: Run version command
+        env:
+          TZ: Asia/Shanghai
+        run: |
+          cd cmake-build-billing
+          ./billing version

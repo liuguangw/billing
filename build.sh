@@ -19,5 +19,6 @@ fi
 
 mkdir -p "${outputDir}"
 cd "${outputDir}" || exit
+cmake --version
 cmake -DCMAKE_BUILD_TYPE=${buildType} ${buildM32} ${buildShared} ..
 cmake --build . --target billing

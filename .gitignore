@@ -2,3 +2,4 @@
 /build
 /.idea
 /server/common/build_info.h
+/server/cmd/help_text.h

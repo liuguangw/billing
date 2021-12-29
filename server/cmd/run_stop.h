@@ -7,7 +7,7 @@
 
 
 namespace cmd {
-    int runStopCommand(char *argv[]);
+    int runStopCommand(int argc, char *argv[]);
 }
 
 

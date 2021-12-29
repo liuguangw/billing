@@ -1,0 +1,18 @@
+//
+// Created by liuguang on 2021/12/29.
+//
+
+#ifndef BILLING_HELP_TEXT_H
+#define BILLING_HELP_TEXT_H
+namespace cmd{
+    static const char* HELP_MAIN = "@BILLING_CMD_TEXT_HELP_MAIN@";
+
+    static const char* HELP_UP = "@BILLING_CMD_TEXT_HELP_UP@";
+
+    static const char* HELP_STOP = "@BILLING_CMD_TEXT_HELP_STOP@";
+
+    static const char* HELP_SHOW_USERS = "@BILLING_CMD_TEXT_HELP_SHOW_USERS@";
+
+    static const char* HELP_VERSION = "@BILLING_CMD_TEXT_HELP_VERSION@";
+}
+#endif //BILLING_HELP_TEXT_H

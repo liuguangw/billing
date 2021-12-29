@@ -1,0 +1,15 @@
+NAME:
+   billing - billing server command line tool
+
+USAGE:
+   billing [global options] command [command options] [arguments...]
+
+COMMANDS:
+   up          run the billing server
+   stop        stop the billing server
+   show_users  show users list status
+   version     show version information
+
+GLOBAL OPTIONS:
+   --log-path value  billing log file path
+   --help, -h        show help (default: false)

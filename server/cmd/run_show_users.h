@@ -7,7 +7,7 @@
 
 
 namespace cmd {
-    int runShowUsers(char *argv[]);
+    int runShowUsers(int argc, char *argv[]);
 }
 
 

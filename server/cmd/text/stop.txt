@@ -1,0 +1,8 @@
+NAME:
+   billing stop - stop the billing server
+
+USAGE:
+   billing stop [options]
+
+OPTIONS:
+   --help, -h  show help (default: false)

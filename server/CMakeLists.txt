@@ -26,6 +26,7 @@ add_custom_command(OUTPUT ${mysqlVersionFilePath} ${mysqlLibOutPath}
 include_directories(../deps/mysql-connector-c-6.1.11-src/include ${mysqlBinaryDir}/include ../deps/yaml-cpp/include)
 # generate build info
 include(cmake/build_info.cmake)
+include(cmake/cmd_text.cmake)
 #
 set(serverSourceList ${mysqlVersionFilePath})
 set(sourceDirList bhandler cmd common debug models services)

@@ -1,0 +1,8 @@
+NAME:
+   billing show_users - show users list status
+
+USAGE:
+   billing show_users [options]
+
+OPTIONS:
+   --help, -h  show help (default: false)

@@ -1,0 +1,10 @@
+NAME:
+   billing up - run the billing server
+
+USAGE:
+   billing up [options]
+
+OPTIONS:
+   --log-path value  billing log file path
+   --daemon, -d      daemon mode, run server at background (default: false)
+   --help, -h        show help (default: false)

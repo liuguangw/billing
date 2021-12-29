@@ -6,7 +6,7 @@
 #define BILLING_RUN_VERSION_H
 
 namespace cmd {
-    int runVersionCommand();
+    int runVersionCommand(int argc, char *argv[]);
 }
 
 #endif //BILLING_RUN_VERSION_H

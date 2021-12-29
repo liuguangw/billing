@@ -18,11 +18,11 @@ namespace cmd {
         if (commandName == "up") {
             return runUpCommand(argc, argv, false);
         } else if (commandName == "stop") {
-            return runStopCommand(argv);
+            return runStopCommand(argc, argv);
         } else if (commandName == "show_users") {
-            return runShowUsers(argv);
+            return runShowUsers(argc, argv);
         } else if (commandName == "version") {
-            return runVersionCommand();
+            return runVersionCommand(argc, argv);
         }
         return runUpCommand(argc, argv, true);
     }

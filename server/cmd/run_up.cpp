@@ -8,6 +8,7 @@
 #include "../services/server.h"
 #include "run_up.h"
 #include "../common/billing_exception.h"
+#include "help_text.h"
 
 namespace cmd {
     int runUpCommand(int argc, char *argv[], bool disableDaemon) {
@@ -16,13 +17,27 @@ namespace cmd {
         string logPath = "billing.log";
         //是否使用守护进程在后台运行
         bool runDaemon = false;
+        bool showHelp = false;
         for (int i = 0; i < argc; i++) {
             if ((strcmp(argv[i], "--log-path") == 0) && (i + 1 < argc)) {
                 logPath = argv[i + 1];
             }
-            if ((!disableDaemon) && (strcmp(argv[i], "-d") == 0)) {
-                runDaemon = true;
+            if (!disableDaemon) {
+                if ((strcmp(argv[i], "-d") == 0) || (strcmp(argv[i], "--daemon") == 0)) {
+                    runDaemon = true;
+                }
             }
+            if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
+                showHelp = true;
+            }
+        }
+        if (showHelp) {
+            if (disableDaemon) {
+                std::cout << HELP_MAIN << std::endl;
+            } else {
+                std::cout << HELP_UP << std::endl;
+            }
+            return EXIT_SUCCESS;
         }
         //daemon - run in the background
         if (runDaemon) {

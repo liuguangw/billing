@@ -1,0 +1,8 @@
+NAME:
+   billing version - show version information
+
+USAGE:
+   billing version [options]
+
+OPTIONS:
+   --help, -h  show help (default: false)

@@ -49,6 +49,12 @@ namespace services {
             this->mStop = stopFlag;
         }
 
+        /**
+         *
+         * @param configFilePath
+         * @param logFilePath
+         * @throws common::BillingException
+         */
         void initResource(const char *configFilePath, const char *logFilePath);
 
         void initDatabase();

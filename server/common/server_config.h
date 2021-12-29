@@ -28,6 +28,10 @@ namespace common {
         PcMaxClientCount;      //每台电脑最多允许进入的用户数量(0表示无限制)
         ServerConfig();
 
+        /**
+         * @param configFilePath
+         * @throws BillingException
+         */
         void initConfig(const char *configFilePath);
     };
 }

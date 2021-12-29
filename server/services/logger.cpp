@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <ctime>
+#include "../common/billing_exception.h"
 
 namespace services {
     const char *colorRed = "\033[31m";
@@ -21,10 +22,14 @@ namespace services {
 
     void Logger::initLogger(const char *logFilePath) {
         using std::ofstream;
-        using std::stringstream;
-        using std::endl;
-        this->logOutStream.open(logFilePath, ofstream::out | ofstream::app);
-        stringstream ss;
+
+        this->logOutStream.exceptions(ofstream::failbit);
+        try {
+            this->logOutStream.open(logFilePath, ofstream::out | ofstream::app);
+        } catch (ofstream::failure &ex) {
+            throw common::BillingException("open log file failed", ex.what());
+        }
+        std::stringstream ss;
         ss << "log file path: " << logFilePath;
         this->infoLn(ss);
     }

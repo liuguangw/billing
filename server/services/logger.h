@@ -18,6 +18,10 @@ namespace services {
 
         Logger(const Logger &s) = delete;
 
+        /**
+         * @param logFilePath
+         * @throws common::BillingException
+         */
         void initLogger(const char *logFilePath);
 
         void infoLn(const char *msg);

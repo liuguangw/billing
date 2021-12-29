@@ -23,7 +23,12 @@ namespace cmd {
         configFilePath += "/config.yaml";
         //配置
         common::ServerConfig serverConfig;
-        serverConfig.initConfig(configFilePath.c_str());
+        try {
+            serverConfig.initConfig(configFilePath.c_str());
+        } catch (common::BillingException &ex) {
+            std::cerr << ex.what() << std::endl;
+            return EXIT_FAILURE;
+        }
         //请求包构造
         common::BillingPacket request;
         request.opType = common::PACKET_TYPE_COMMAND;

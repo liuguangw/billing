@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "../services/server.h"
 #include "run_up.h"
+#include "../common/billing_exception.h"
 
 namespace cmd {
     int runUpCommand(int argc, char *argv[], bool disableDaemon) {
@@ -45,7 +46,12 @@ namespace cmd {
         }
         logFilePath += logPath;
         services::Server server;
-        server.initResource(configFilePath.c_str(), logFilePath.c_str());
+        try {
+            server.initResource(configFilePath.c_str(), logFilePath.c_str());
+        } catch (common::BillingException &ex) {
+            std::cerr << ex.what() << std::endl;
+            return EXIT_FAILURE;
+        }
         return server.run();
     }
 }

@@ -30,6 +30,13 @@ namespace services {
 
     private:
         ofstream logOutStream;
+        const unsigned int timeBufferSize = 29;
+
+        /**
+         * 格式化时间
+         * @param timeBuffer
+         */
+        void formatTime(char *timeBuffer) const;
     };
 }
 

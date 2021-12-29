@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <ctime>
 
 namespace services {
     const char *colorRed = "\033[31m";
@@ -31,10 +32,12 @@ namespace services {
     void Logger::infoLn(const char *msg) {
         using std::cout;
         using std::endl;
+        char timeBuffer[this->timeBufferSize];
+        this->formatTime(timeBuffer);
 
-        cout << colorGreen << "[info]" << colorReset << msg << endl;
+        cout << "[" << timeBuffer << "]" << colorGreen << "[info]  " << colorReset << msg << endl;
         if (this->logOutStream.is_open()) {
-            this->logOutStream << "[info]" << msg << endl;
+            this->logOutStream << "[" << timeBuffer << "][info]  " << msg << endl;
         }
     }
 
@@ -45,14 +48,22 @@ namespace services {
     void Logger::errorLn(const char *msg) {
         using std::cerr;
         using std::endl;
+        char timeBuffer[this->timeBufferSize];
+        this->formatTime(timeBuffer);
 
-        cerr << colorRed << "[error]" << colorReset << msg << endl;
+        cerr << "[" << timeBuffer << "]" << colorRed << "[error] " << colorReset << msg << endl;
         if (this->logOutStream.is_open()) {
-            this->logOutStream << "[error]" << msg << endl;
+            this->logOutStream << "[" << timeBuffer << "][error] " << msg << endl;
         }
     }
 
     void Logger::errorLn(const std::stringstream &msg) {
         this->errorLn(msg.str().c_str());
+    }
+
+    void Logger::formatTime(char *timeBuffer) const {
+        auto currentTime = time(nullptr);
+        auto localTime = localtime(&currentTime);
+        strftime(timeBuffer, this->timeBufferSize, "%F %T GMT%z", localTime);
     }
 }

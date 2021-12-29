@@ -1,5 +1,6 @@
 *.sh text eol=lf
 *.h text eol=lf
+*.h.in text eol=lf
 *.cpp text eol=lf
 *.cc text eol=lf
 *.txt text eol=lf

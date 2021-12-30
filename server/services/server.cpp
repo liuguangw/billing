@@ -113,7 +113,7 @@ namespace services {
             return EXIT_FAILURE;
         }
         {
-            auto serverConfig = this->handlerResource.config();
+            auto &serverConfig = this->handlerResource.config();
             ss.str("");
             ss << "billing server run at " << serverConfig.IP.c_str() << ":" << serverConfig.Port;
             logger.infoLn(ss);

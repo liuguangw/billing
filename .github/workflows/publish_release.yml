@@ -22,19 +22,19 @@ jobs:
           mkdir -p billing-release-static
           cp billing config.yaml ./billing-release-static/
           tar -zcf billing-release-static.tar.gz billing-release-static
+          rm ./*.txt
           cd ..
           ./build.sh shared
           cd cmake-build-billing
           mkdir -p billing-release-shared
-          cp billing config.yaml ./billing-release-shared/
+          cp -r billing config.yaml lib ./billing-release-shared/
           tar -zcf billing-release-shared.tar.gz billing-release-shared
-          cd ..
           ls -alh
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-         files: billing-release-*.tar.gz
+         files: cmake-build-billing/billing-release-*.tar.gz
          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

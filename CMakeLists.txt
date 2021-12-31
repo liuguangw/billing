@@ -25,3 +25,12 @@ add_executable(${PROJECT_NAME} main.cpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./lib")
 target_link_libraries(${PROJECT_NAME} server)
 file(COPY config.yaml DESTINATION ${PROJECT_BINARY_DIR})
+# compress
+if (NOT (${BUILD_SHARED_LIBS}))
+    find_program(UPX_BIN upx)
+    if (NOT ("${UPX_BIN}" STREQUAL "UPX_BIN-NOTFOUND"))
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND echo "using upx ..."
+                COMMAND ${UPX_BIN} --best ${PROJECT_BINARY_DIR}/${PROJECT_NAME})
+    endif ()
+endif ()
